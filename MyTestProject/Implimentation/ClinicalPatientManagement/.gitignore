@@ -1,0 +1,55 @@
+## Binaries, caches and logs
+*.o
+*.so
+*.exe
+*.dll
+*.pdb
+*.dbmdl
+*.mdf
+*.ldf
+*.class
+*.jar
+*.war
+
+## Visual Studio and IDE
+.vs/
+.vscode/
+obj/
+bin/
+*.user
+*.suo
+*.sln.docstates
+.idea/
+*.iml
+
+## NuGet
+packages/
+.nuget/
+*.nupkg
+*.symbols.nupkg
+
+## Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+
+## Entity Framework
+*.bak
+
+## Local environment
+appsettings.local.json
+appsettings.Production.json
+*.local.json
+
+## Logs
+logs/
+*.log
+
+## Runtime
+node_modules/
+dist/
+
+## OS
+.DS_Store
+Thumbs.db
