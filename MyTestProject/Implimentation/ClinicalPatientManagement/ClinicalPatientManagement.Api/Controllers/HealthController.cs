@@ -20,7 +20,6 @@ public class HealthController : ControllerBase
     /// Get API health status
     /// </summary>
     [HttpGet]
-    [ProduceResponseType(StatusCodes.Status200OK)]
     public ActionResult<HealthResponse> Get()
     {
         _logger.LogInformation("Health check endpoint called");

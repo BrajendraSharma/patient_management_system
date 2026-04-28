@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.AspNetCore.Components.Web;
 using ClinicalPatientManagement.Client;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -11,6 +12,9 @@ builder.Services.AddScoped(sp => new HttpClient
 { 
     BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) 
 });
+
+// Register HTTP client factory
+builder.Services.AddHttpClient();
 
 // Register API HTTP client
 builder.Services.AddHttpClient("ClinicalApi", client =>
