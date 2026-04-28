@@ -1,4 +1,5 @@
 using Serilog;
+using ClinicalPatientManagement.Api.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,6 +31,10 @@ try
                   .AllowAnyHeader();
         });
     });
+
+    // Add application services and infrastructure
+    builder.Services.AddApplicationServices(builder.Configuration);
+    builder.Services.AddApiInfrastructure();
 
     var app = builder.Build();
 
