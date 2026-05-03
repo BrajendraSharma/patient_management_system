@@ -1,6 +1,8 @@
 using ClinicalPatientManagement.Api.Data;
 using ClinicalPatientManagement.Api.Mappings;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using ClinicalPatientManagement.Api.Models;
 
 namespace ClinicalPatientManagement.Api.Extensions;
 
@@ -17,6 +19,11 @@ public static class DependencyInjectionExtensions
         // Add DbContext
         services.AddDbContext<ClinicalDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+
+        // Add Identity
+        services.AddIdentity<ApplicationUser, IdentityRole>()
+            .AddEntityFrameworkStores<ClinicalDbContext>()
+            .AddDefaultTokenProviders();
 
         // Add AutoMapper
         services.AddAutoMapper(typeof(MappingProfile));
