@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;using Microsoft.AspNetCore.Http;using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 using ClinicalPatientManagement.Api.Controllers;
@@ -12,6 +13,7 @@ public class AuthControllerTests
 {
     private readonly Mock<UserManager<ApplicationUser>> _userManagerMock;
     private readonly Mock<IConfiguration> _configurationMock;
+    private readonly Mock<ILogger<AuthController>> _loggerMock;
     private readonly AuthController _controller;
 
     public AuthControllerTests()
@@ -19,6 +21,7 @@ public class AuthControllerTests
         _userManagerMock = new Mock<UserManager<ApplicationUser>>(
             Mock.Of<IUserStore<ApplicationUser>>(), null, null, null, null, null, null, null, null);
         _configurationMock = new Mock<IConfiguration>();
+        _loggerMock = new Mock<ILogger<AuthController>>();
 
         // Setup configuration
         _configurationMock.Setup(c => c["Jwt:Key"]).Returns("your-super-secret-key-change-in-production-min-32-chars");
@@ -28,7 +31,8 @@ public class AuthControllerTests
 
         _controller = new AuthController(
             _userManagerMock.Object,
-            _configurationMock.Object);
+            _configurationMock.Object,
+            _loggerMock.Object);
     }
 
     [Fact]
@@ -93,5 +97,31 @@ public class AuthControllerTests
         // Assert
         var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result);
         Assert.Equal("Invalid username or password", unauthorizedResult.Value);
+    }
+
+    [Fact]
+    public async Task Login_SuccessfulLogin_LogsInformation()
+    {
+        // Arrange
+        var loginDto = new LoginDto { Username = "doctor", Password = "Password123!" };
+        var user = new ApplicationUser { UserName = "doctor", Id = "1" };
+
+        _userManagerMock.Setup(um => um.FindByNameAsync(loginDto.Username))
+            .ReturnsAsync(user);
+        _userManagerMock.Setup(um => um.CheckPasswordAsync(user, loginDto.Password))
+            .ReturnsAsync(true);
+
+        // Act
+        await _controller.Login(loginDto);
+
+        // Assert
+        _loggerMock.Verify(
+            x => x.Log(
+                LogLevel.Information,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((o, t) => o.ToString().Contains("Successful login for user: doctor")),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+            Times.Once);
     }
 }
