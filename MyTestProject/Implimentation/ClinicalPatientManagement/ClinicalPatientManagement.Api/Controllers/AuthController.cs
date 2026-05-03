@@ -18,13 +18,16 @@ public class AuthController : ControllerBase
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IConfiguration _configuration;
+    private readonly ILogger<AuthController> _logger;
 
     public AuthController(
         UserManager<ApplicationUser> userManager,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        ILogger<AuthController> logger)
     {
         _userManager = userManager;
         _configuration = configuration;
+        _logger = logger;
     }
 
     /// <summary>
@@ -34,17 +37,27 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
     {
         if (!ModelState.IsValid)
+        {
+            _logger.LogWarning("Invalid login attempt with invalid model state for username: {Username}", loginDto.Username);
             return BadRequest(ModelState);
+        }
 
         var user = await _userManager.FindByNameAsync(loginDto.Username);
         if (user == null)
+        {
+            _logger.LogWarning("Failed login attempt for non-existent user: {Username}", loginDto.Username);
             return Unauthorized("Invalid username or password");
+        }
 
         var isPasswordValid = await _userManager.CheckPasswordAsync(user, loginDto.Password);
         if (!isPasswordValid)
+        {
+            _logger.LogWarning("Failed login attempt for user: {Username} - invalid password", loginDto.Username);
             return Unauthorized("Invalid username or password");
+        }
 
         var token = GenerateJwtToken(user);
+        _logger.LogInformation("Successful login for user: {Username}", loginDto.Username);
         return Ok(new { Token = token });
     }
 
