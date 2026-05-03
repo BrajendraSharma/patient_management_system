@@ -1,8 +1,111 @@
 @page "/"
-@* Main dashboard page - To be completed in Step 6 *@
+@inject NavigationManager Navigation
 
-<div class="container">
-    <h1>Clinical Patient Management System</h1>
-    <p>Welcome to the patient management system</p>
-    @* Content to be added in Step 6+ *@
+<div class="landing-page">
+    <div class="hero-section">
+        <div class="container text-center">
+            <h1 class="display-4">Clinical Patient Management System</h1>
+            <p class="lead">A comprehensive solution for managing patient records, appointments, and medical data securely.</p>
+            
+            <div class="hero-actions mt-4">
+                <button class="btn btn-primary btn-lg me-3" @onclick="NavigateToLogin">
+                    <i class="bi bi-box-arrow-in-right"></i> Login to System
+                </button>
+                <button class="btn btn-outline-secondary btn-lg" @onclick="NavigateToAbout">
+                    <i class="bi bi-info-circle"></i> Learn More
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="features-section py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <div class="feature-card text-center">
+                        <i class="bi bi-person-lines-fill feature-icon"></i>
+                        <h5>Patient Management</h5>
+                        <p>Comprehensive patient records with medical history and treatment plans.</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="feature-card text-center">
+                        <i class="bi bi-calendar-check feature-icon"></i>
+                        <h5>Appointment Scheduling</h5>
+                        <p>Efficient appointment management with automated reminders and scheduling.</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="feature-card text-center">
+                        <i class="bi bi-shield-lock feature-icon"></i>
+                        <h5>Secure & Compliant</h5>
+                        <p>Built with security in mind, ensuring patient data privacy and compliance.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-section bg-light py-4">
+        <div class="container text-center">
+            <p class="mb-0">&copy; 2026 Clinical Patient Management System. All rights reserved.</p>
+        </div>
+    </div>
 </div>
+
+<style>
+.landing-page {
+    min-height: 100vh;
+}
+
+.hero-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 100px 0;
+}
+
+.hero-actions .btn {
+    border-radius: 25px;
+    padding: 12px 30px;
+    font-weight: 500;
+}
+
+.features-section {
+    background-color: #f8f9fa;
+}
+
+.feature-card {
+    background: white;
+    padding: 30px 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+}
+
+.feature-icon {
+    font-size: 3rem;
+    color: #667eea;
+    margin-bottom: 20px;
+}
+
+.footer-section {
+    border-top: 1px solid #dee2e6;
+}
+</style>
+
+@code {
+    private void NavigateToLogin()
+    {
+        Navigation.NavigateTo("/login");
+    }
+
+    private void NavigateToAbout()
+    {
+        // For future implementation
+        Navigation.NavigateTo("/login");
+    }
+}

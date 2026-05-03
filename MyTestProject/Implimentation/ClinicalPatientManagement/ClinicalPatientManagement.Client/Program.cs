@@ -8,18 +8,18 @@ builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 // Configure HTTP client for API communication
-builder.Services.AddScoped(sp => new HttpClient 
-{ 
-    BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) 
+var apiUrl = builder.Configuration["ApiUrl"] ?? "https://localhost:7001";
+var apiBaseAddress = apiUrl.EndsWith("/") ? apiUrl : apiUrl + "/";
+
+builder.Services.AddScoped(sp => new HttpClient
+{
+    BaseAddress = new Uri(apiBaseAddress)
 });
 
-// Register HTTP client factory
-builder.Services.AddHttpClient();
-
-// Register API HTTP client
+// Register HTTP client factory for named API client
 builder.Services.AddHttpClient("ClinicalApi", client =>
 {
-    client.BaseAddress = new Uri(builder.Configuration["ApiUrl"] ?? "https://localhost:5001");
+    client.BaseAddress = new Uri(apiBaseAddress);
 });
 
 await builder.Build().RunAsync();

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using ClinicalPatientManagement.Api.Models;
 
@@ -6,7 +7,7 @@ namespace ClinicalPatientManagement.Api.Data;
 /// <summary>
 /// Application DbContext for Clinical Patient Management
 /// </summary>
-public class ClinicalDbContext : DbContext
+public class ClinicalDbContext : IdentityDbContext<ApplicationUser>
 {
     public ClinicalDbContext(DbContextOptions<ClinicalDbContext> options) 
         : base(options)
