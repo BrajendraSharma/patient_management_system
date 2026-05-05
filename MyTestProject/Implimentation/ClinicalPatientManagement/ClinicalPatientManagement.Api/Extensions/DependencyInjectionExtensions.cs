@@ -1,5 +1,7 @@
 using ClinicalPatientManagement.Api.Data;
 using ClinicalPatientManagement.Api.Mappings;
+using ClinicalPatientManagement.Api.Repositories;
+using ClinicalPatientManagement.Api.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using ClinicalPatientManagement.Api.Models;
@@ -28,11 +30,16 @@ public static class DependencyInjectionExtensions
         // Add AutoMapper
         services.AddAutoMapper(typeof(MappingProfile));
 
-        // Repository and Service registrations will be added here in Steps 3+
-        // Example pattern:
-        // services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-        // services.AddScoped<IPatientService, PatientService>();
+        // Step 6: Register Patient Repository and Service
+        services.AddScoped<PatientRepository>();
+        services.AddScoped<IPatientRepository>(sp => sp.GetRequiredService<PatientRepository>());
+        services.AddScoped<IPatientService, PatientService>();
+
+        // Additional repositories and services will be added in future steps
+        // services.AddScoped<AppointmentRepository>();
         // services.AddScoped<IAppointmentService, AppointmentService>();
+        // services.AddScoped<ConsultationRepository>();
+        // services.AddScoped<IConsultationService, ConsultationService>();
 
         return services;
     }

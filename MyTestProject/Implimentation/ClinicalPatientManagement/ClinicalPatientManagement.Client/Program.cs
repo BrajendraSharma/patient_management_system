@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.AspNetCore.Components.Web;
 using ClinicalPatientManagement.Client;
+using ClinicalPatientManagement.Client.Services;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
@@ -21,5 +22,8 @@ builder.Services.AddHttpClient("ClinicalApi", client =>
 {
     client.BaseAddress = new Uri(apiBaseAddress);
 });
+
+// Step 6: Register Patient API Client
+builder.Services.AddScoped<IPatientApiClient, PatientApiClient>();
 
 await builder.Build().RunAsync();

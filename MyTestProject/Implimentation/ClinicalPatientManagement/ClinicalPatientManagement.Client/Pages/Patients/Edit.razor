@@ -1,0 +1,169 @@
+@page "/patients/edit/{PatientId:int}"
+@using ClinicalPatientManagement.Client.Models
+@using ClinicalPatientManagement.Client.Services
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Components.Forms
+@inject IPatientApiClient PatientApiClient
+@inject NavigationManager Navigation
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <h2 class="mb-4">Edit Patient</h2>
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @errorMessage
+                    <button type="button" class="btn-close" @onclick="() => errorMessage = string.Empty"></button>
+                </div>
+            }
+
+            @if (isLoading)
+            {
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            }
+            else if (patientToEdit == null)
+            {
+                <div class="alert alert-warning">Patient not found.</div>
+            }
+            else
+            {
+                <div class="card">
+                    <div class="card-body">
+                        <EditForm Model="@patientToEdit" OnValidSubmit="@UpdatePatient">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary />
+
+                            <div class="mb-3">
+                                <label for="firstName" class="form-label">First Name *</label>
+                                <InputText id="firstName" class="form-control" @bind-value="patientToEdit.FirstName" placeholder="Enter first name" />
+                                <ValidationMessage For="@(() => patientToEdit.FirstName)" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="lastName" class="form-label">Last Name *</label>
+                                <InputText id="lastName" class="form-control" @bind-value="patientToEdit.LastName" placeholder="Enter last name" />
+                                <ValidationMessage For="@(() => patientToEdit.LastName)" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">Phone *</label>
+                                <InputText id="phone" class="form-control" @bind-value="patientToEdit.Phone" placeholder="Enter phone number" />
+                                <ValidationMessage For="@(() => patientToEdit.Phone)" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <InputText id="email" type="email" class="form-control" @bind-value="patientToEdit.Email" placeholder="Enter email address" />
+                                <ValidationMessage For="@(() => patientToEdit.Email)" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="dob" class="form-label">Date of Birth *</label>
+                                <InputDate id="dob" class="form-control" @bind-value="patientToEdit.DateOfBirth" />
+                                <ValidationMessage For="@(() => patientToEdit.DateOfBirth)" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="gender" class="form-label">Gender *</label>
+                                <InputSelect id="gender" class="form-select" @bind-value="patientToEdit.Gender">
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </InputSelect>
+                                <ValidationMessage For="@(() => patientToEdit.Gender)" />
+                            </div>
+
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <a href="/patients" class="btn btn-secondary">
+                                    <i class="bi bi-x-circle"></i> Cancel
+                                </a>
+                                <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                                    @if (isSubmitting)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2"></span>
+                                    }
+                                    <i class="bi bi-check-circle"></i> Update Patient
+                                </button>
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int PatientId { get; set; }
+
+    private UpdatePatientModel patientToEdit = new();
+    private string errorMessage = string.Empty;
+    private bool isLoading = false;
+    private bool isSubmitting = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPatient();
+    }
+
+    private async Task LoadPatient()
+    {
+        isLoading = true;
+        errorMessage = string.Empty;
+        try
+        {
+            var patient = await PatientApiClient.GetByIdAsync(PatientId);
+            if (patient != null)
+            {
+                patientToEdit = new UpdatePatientModel
+                {
+                    Id = patient.Id,
+                    FirstName = patient.FirstName,
+                    LastName = patient.LastName,
+                    Phone = patient.Phone,
+                    Email = patient.Email,
+                    DateOfBirth = patient.DateOfBirth,
+                    Gender = patient.Gender
+                };
+            }
+            else
+            {
+                errorMessage = "Patient not found.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading patient: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task UpdatePatient()
+    {
+        isSubmitting = true;
+        errorMessage = string.Empty;
+        try
+        {
+            await PatientApiClient.UpdateAsync(PatientId, patientToEdit);
+            Navigation.NavigateTo("/patients");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error updating patient: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+}

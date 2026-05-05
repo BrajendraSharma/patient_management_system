@@ -1,20 +1,23 @@
 using AutoMapper;
+using ClinicalPatientManagement.Api.DTOs;
+using ClinicalPatientManagement.Api.Models;
 
 namespace ClinicalPatientManagement.Api.Mappings;
 
 /// <summary>
 /// AutoMapper profile configuration for entity-to-DTO mappings
-/// Will be expanded with specific entity mappings in later steps
+/// Step 6: Patient Management - Maps Patient entities to DTOs
 /// </summary>
 public class MappingProfile : Profile
 {
     public MappingProfile()
     {
-        // Entity to DTO mappings will be added here
-        // Pattern: CreateMap<Entity, EntityDTO>().ReverseMap();
+        // Step 6: Patient Management mappings
+        CreateMap<Patient, PatientDto>().ReverseMap();
+        CreateMap<CreatePatientDto, Patient>();
+        CreateMap<UpdatePatientDto, Patient>();
         
-        // Example (to be added in Step 6):
-        // CreateMap<Patient, PatientDto>().ReverseMap();
+        // Future steps will add more mappings here
         // CreateMap<Appointment, AppointmentDto>().ReverseMap();
         // CreateMap<Consultation, ConsultationDto>().ReverseMap();
     }

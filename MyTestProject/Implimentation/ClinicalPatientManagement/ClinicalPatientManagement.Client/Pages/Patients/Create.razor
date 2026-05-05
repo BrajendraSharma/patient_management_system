@@ -1,0 +1,110 @@
+@page "/patients/create"
+@using ClinicalPatientManagement.Client.Models
+@using ClinicalPatientManagement.Client.Services
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Components.Forms
+@inject IPatientApiClient PatientApiClient
+@inject NavigationManager Navigation
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <h2 class="mb-4">Create New Patient</h2>
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @errorMessage
+                    <button type="button" class="btn-close" @onclick="() => errorMessage = string.Empty"></button>
+                </div>
+            }
+
+            <div class="card">
+                <div class="card-body">
+                    <EditForm Model="@newPatient" OnValidSubmit="@SavePatient">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <div class="mb-3">
+                            <label for="firstName" class="form-label">First Name *</label>
+                            <InputText id="firstName" class="form-control" @bind-value="newPatient.FirstName" placeholder="Enter first name" />
+                            <ValidationMessage For="@(() => newPatient.FirstName)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="lastName" class="form-label">Last Name *</label>
+                            <InputText id="lastName" class="form-control" @bind-value="newPatient.LastName" placeholder="Enter last name" />
+                            <ValidationMessage For="@(() => newPatient.LastName)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">Phone *</label>
+                            <InputText id="phone" class="form-control" @bind-value="newPatient.Phone" placeholder="Enter phone number" />
+                            <ValidationMessage For="@(() => newPatient.Phone)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <InputText id="email" type="email" class="form-control" @bind-value="newPatient.Email" placeholder="Enter email address" />
+                            <ValidationMessage For="@(() => newPatient.Email)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="dob" class="form-label">Date of Birth *</label>
+                            <InputDate id="dob" class="form-control" @bind-value="newPatient.DateOfBirth" />
+                            <ValidationMessage For="@(() => newPatient.DateOfBirth)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="gender" class="form-label">Gender *</label>
+                            <InputSelect id="gender" class="form-select" @bind-value="newPatient.Gender">
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </InputSelect>
+                            <ValidationMessage For="@(() => newPatient.Gender)" />
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="/patients" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                                @if (isSubmitting)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2"></span>
+                                }
+                                <i class="bi bi-check-circle"></i> Save Patient
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private CreatePatientModel newPatient = new();
+    private string errorMessage = string.Empty;
+    private bool isSubmitting = false;
+
+    private async Task SavePatient()
+    {
+        isSubmitting = true;
+        errorMessage = string.Empty;
+        try
+        {
+            var result = await PatientApiClient.CreateAsync(newPatient);
+            Navigation.NavigateTo("/patients");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error creating patient: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+}
