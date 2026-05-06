@@ -58,7 +58,17 @@ public class AuthController : ControllerBase
 
         var token = GenerateJwtToken(user);
         _logger.LogInformation("Successful login for user: {Username}", loginDto.Username);
-        return Ok(new { Token = token });
+        return Ok(new { Token = token, Username = user.UserName });
+    }
+
+    /// <summary>
+    /// Logout endpoint - clears token on client side
+    /// </summary>
+    [HttpPost("logout")]
+    public IActionResult Logout()
+    {
+        _logger.LogInformation("User logout requested");
+        return Ok(new { Message = "Logout successful" });
     }
 
     private string GenerateJwtToken(ApplicationUser user)

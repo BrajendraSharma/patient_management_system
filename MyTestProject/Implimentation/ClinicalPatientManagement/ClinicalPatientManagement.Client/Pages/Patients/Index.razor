@@ -3,6 +3,7 @@
 @using ClinicalPatientManagement.Client.Models
 @using ClinicalPatientManagement.Client.Services
 @using Microsoft.JSInterop
+@attribute [Authorize]
 @inject IPatientApiClient PatientApiClient
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
