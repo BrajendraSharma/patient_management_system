@@ -44,12 +44,60 @@ This planning document outlines the implementation of a web-based clinical patie
    **Verification Method**: Run migrations and verify tables exist in SQL Server with correct columns/constraints.  
    **Requirement Reference(s)**: Functional Requirements - Patient Management, Appointment Management, Consultation Workflow; Performance (indexes for fast search).
 
-4. **Step Name**: Implement authentication  
-   **Objective**: Set up ASP.NET Identity for single-user login and JWT token handling.  
+4. **Step Name**: Implement authentication & navigation  
+   **Objective**: Set up ASP.NET Identity for single-user login, JWT token handling, logout, and authenticated navigation.  
    **Inputs**: Project structure from Step 2.  
-   **Expected Outputs**: AuthController, JWT configuration in appsettings.json, login page in Blazor.  
-   **Verification Method**: Attempt login; verify JWT token generation and API authorization (401 without token).  
-   **Requirement Reference(s)**: Security (single-user authentication, data encryption); Users and Stakeholders (single physician).
+   **Expected Outputs**: 
+   - AuthController with login & logout endpoints (POST /api/auth/login, POST /api/auth/logout)
+   - JWT configuration in appsettings.json
+   - Login page (Blazor /login route)
+   - Navigation component with authenticated user menu
+   - Logout button in navigation bar
+   - Route protection using @attribute [Authorize] on protected Blazor pages
+   - Conditional navigation rendering based on authentication state
+   - localStorage token persistence and retrieval  
+   **Verification Method**: 
+   - Attempt login; verify JWT token generation and API authorization (401 without token)
+   - Logout clears localStorage and redirects to /login
+   - Protected pages (e.g., /patients) redirect unauthenticated users to /login
+   - Navigation menu only visible when authenticated
+   **Requirement Reference(s)**: Security (single-user authentication, data encryption); Users and Stakeholders (single physician); Usability (clear navigation).
+
+**Step 4.5: UI Navigation & Page Flow Architecture** (NEW)  
+   **Objective**: Define and implement the navigation structure and page routing for authenticated and unauthenticated users.  
+   **Inputs**: Authentication from Step 4, page components from Steps 6-13.  
+   **Expected Outputs**:
+   - Navigation bar component with authenticated user menu
+   - Sidebar/menu with quick links to main features
+   - Page routing configuration (@page directives)
+   - Layout.razor for consistent header/navigation across pages
+   - Redirect logic for unauthenticated access attempts
+   - User profile display in navigation
+   
+   **Navigation Flow:**
+   - **Unauthenticated Routes (Public):**
+     - `/` - Landing page with login button
+     - `/login` - Login form
+     - All other routes redirect to `/login`
+   
+   - **Authenticated Routes (Protected):**
+     - `/` - Dashboard/home with quick action links (after login)
+     - `/patients` - Patient list with search
+     - `/patients/create` - New patient registration form
+     - `/patients/edit/{id}` - Edit existing patient
+     - `/appointments` - Appointment scheduling and list
+     - `/appointments/create` - New appointment form
+     - `/appointments/{id}` - Appointment details
+     - `/consultations/{appointmentId}` - Consultation capture form
+     - `/history/{patientId}` - Patient visit history with filtering
+     - `/export` - Data export options (Excel/PDF)
+   
+   **Verification Method**: 
+   - Navigate to protected route without login; verify redirect to /login
+   - After login, verify all navigation links are accessible
+   - Verify logout button clears token and redirects to /login
+   - Verify navigation menu displays authenticated user info
+   **Requirement Reference(s)**: Usability (30-minute training, intuitive navigation); Security (route protection); User Experience (clear workflows).
 
 5. **Step Name**: Set up logging  
    **Objective**: Integrate Serilog for structured logging and audit trails.  
@@ -60,14 +108,14 @@ This planning document outlines the implementation of a web-based clinical patie
 
 6. **Step Name**: Implement patient management  
    **Objective**: Build CRUD for patients including registration, edit, view, and search.  
-   **Inputs**: Database schema from Step 3, authentication from Step 4.  
+   **Inputs**: Database schema from Step 3, authentication & navigation from Steps 4-4.5.  
    **Expected Outputs**: PatientsController, PatientService, Patient model/DTO, Blazor pages (Create, Edit, Index).  
    **Verification Method**: Register a patient via UI, search by name/phone, verify data in DB.  
    **Requirement Reference(s)**: Functional Requirements - Patient Management, Patient Search.
 
 7. **Step Name**: Implement appointment scheduling  
    **Objective**: Enable scheduling and tracking appointments with status updates.  
-   **Inputs**: Patient management from Step 6.  
+   **Inputs**: Patient management from Step 6, UI navigation from Step 4.5.  
    **Expected Outputs**: AppointmentsController, AppointmentService, Appointment model, Blazor pages (Create, Index).  
    **Verification Method**: Schedule appointment, update status, view daily list.  
    **Requirement Reference(s)**: Functional Requirements - Appointment Management, Appointment Tracking.
@@ -81,7 +129,7 @@ This planning document outlines the implementation of a web-based clinical patie
 
 9. **Step Name**: Implement consultation creation  
    **Objective**: Capture vitals, complaints, diagnosis in consultation workflow.  
-   **Inputs**: Appointments from Step 7.  
+   **Inputs**: Appointments from Step 7, UI navigation from Step 4.5.  
    **Expected Outputs**: ConsultationsController, ConsultationService, Consultation model, Create.razor page.  
    **Verification Method**: Complete consultation form, verify data saved in DB.  
    **Requirement Reference(s)**: Functional Requirements - Consultation Workflow (Vitals, Complaints, Diagnosis).
@@ -102,14 +150,14 @@ This planning document outlines the implementation of a web-based clinical patie
 
 12. **Step Name**: Implement patient history  
     **Objective**: View past visits with date filtering and details.  
-    **Inputs**: Consultations from Step 9.  
+   **Inputs**: Consultations from Step 9, UI navigation from Step 4.5.
     **Expected Outputs**: History.razor page, updated ConsultationService for filtering.  
     **Verification Method**: View history, filter by date, display vitals/diagnosis/prescriptions.  
     **Requirement Reference(s)**: Functional Requirements - Patient History.
 
 13. **Step Name**: Add data export  
     **Objective**: Export patient/visit data to Excel/PDF with specified fields.  
-    **Inputs**: Patient history from Step 12.  
+   **Inputs**: Patient history from Step 12, UI navigation from Step 4.5.
     **Expected Outputs**: ExportService, Index.razor for export options.  
     **Verification Method**: Export file, verify fields (DD-MM-YYYY dates), open in Excel/PDF.  
     **Requirement Reference(s)**: Functional Requirements - Data Export; Approved Assumption - Export formats/fields.

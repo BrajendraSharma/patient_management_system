@@ -1,56 +1,84 @@
 @page "/"
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
 
-<div class="landing-page">
-    <div class="hero-section">
-        <div class="container text-center">
-            <h1 class="display-4">Clinical Patient Management System</h1>
-            <p class="lead">A comprehensive solution for managing patient records, appointments, and medical data securely.</p>
-            
-            <div class="hero-actions mt-4">
-                <a href="/login" class="btn btn-primary btn-lg me-3">
-                    <i class="bi bi-box-arrow-in-right"></i> Login to System
-                </a>
-                <a href="/login" class="btn btn-outline-secondary btn-lg">
-                    <i class="bi bi-info-circle"></i> Learn More
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <div class="features-section py-5">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-4 mb-4">
-                    <div class="feature-card text-center">
-                        <i class="bi bi-person-lines-fill feature-icon"></i>
-                        <h5>Patient Management</h5>
-                        <p>Comprehensive patient records with medical history and treatment plans.</p>
-                    </div>
-                </div>
-                <div class="col-md-4 mb-4">
-                    <div class="feature-card text-center">
-                        <i class="bi bi-calendar-check feature-icon"></i>
-                        <h5>Appointment Scheduling</h5>
-                        <p>Efficient appointment management with automated reminders and scheduling.</p>
-                    </div>
-                </div>
-                <div class="col-md-4 mb-4">
-                    <div class="feature-card text-center">
-                        <i class="bi bi-shield-lock feature-icon"></i>
-                        <h5>Secure & Compliant</h5>
-                        <p>Built with security in mind, ensuring patient data privacy and compliance.</p>
+<AuthorizeView>
+    <Authorized>
+        <!-- If user is authenticated, show the dashboard instead -->
+        @if (shouldShowDashboard)
+        {
+            <div style="display: none;">This space is intentionally left empty - redirecting to dashboard</div>
+        }
+    </Authorized>
+    <NotAuthorized>
+        <div class="landing-page">
+            <div class="hero-section">
+                <div class="container text-center">
+                    <h1 class="display-4">Clinical Patient Management System</h1>
+                    <p class="lead">A comprehensive solution for managing patient records, appointments, and medical data securely.</p>
+                    
+                    <div class="hero-actions mt-4">
+                        <a href="/login" class="btn btn-primary btn-lg me-3">
+                            <i class="bi bi-box-arrow-in-right"></i> Login to System
+                        </a>
+                        <a href="#features" class="btn btn-outline-secondary btn-lg">
+                            <i class="bi bi-info-circle"></i> Learn More
+                        </a>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <div class="footer-section bg-light py-4">
-        <div class="container text-center">
-            <p class="mb-0">&copy; 2026 Clinical Patient Management System. All rights reserved.</p>
+            <div class="features-section py-5" id="features">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-md-4 mb-4">
+                            <div class="feature-card text-center">
+                                <i class="bi bi-person-lines-fill feature-icon"></i>
+                                <h5>Patient Management</h5>
+                                <p>Comprehensive patient records with medical history and treatment plans.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <div class="feature-card text-center">
+                                <i class="bi bi-calendar-check feature-icon"></i>
+                                <h5>Appointment Scheduling</h5>
+                                <p>Efficient appointment management with automated reminders and scheduling.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <div class="feature-card text-center">
+                                <i class="bi bi-shield-lock feature-icon"></i>
+                                <h5>Secure & Compliant</h5>
+                                <p>Built with security in mind, ensuring patient data privacy and compliance.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-section bg-light py-4">
+                <div class="container text-center">
+                    <p class="mb-0">&copy; 2026 Clinical Patient Management System. All rights reserved.</p>
+                </div>
+            </div>
         </div>
-    </div>
-</div>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private bool shouldShowDashboard = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (authState.User?.Identity?.IsAuthenticated == true)
+        {
+            shouldShowDashboard = true;
+            Navigation.NavigateTo("/dashboard");
+        }
+    }
+}
 
 <style>
 .landing-page {

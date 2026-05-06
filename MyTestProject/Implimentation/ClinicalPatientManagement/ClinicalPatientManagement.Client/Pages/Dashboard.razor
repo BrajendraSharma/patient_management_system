@@ -1,0 +1,163 @@
+@page "/"
+@attribute [Authorize]
+
+<div class="dashboard-container">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1 class="display-5">Welcome to Clinical Patient Management System</h1>
+            <p class="lead text-muted">Manage your patients, appointments, and consultations efficiently</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Patient Management Card -->
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm feature-card">
+                <div class="card-body text-center">
+                    <i class="bi bi-people-fill feature-icon text-primary"></i>
+                    <h5 class="card-title mt-3">Patient Management</h5>
+                    <p class="card-text">Register new patients, view patient details, search and manage patient records.</p>
+                </div>
+                <div class="card-footer bg-white border-0">
+                    <a href="/patients" class="btn btn-primary w-100">
+                        <i class="bi bi-arrow-right"></i> Go to Patients
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Appointment Management Card -->
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm feature-card">
+                <div class="card-body text-center">
+                    <i class="bi bi-calendar-check-fill feature-icon text-success"></i>
+                    <h5 class="card-title mt-3">Appointment Scheduling</h5>
+                    <p class="card-text">Schedule new appointments, view appointment list, and manage appointment statuses.</p>
+                </div>
+                <div class="card-footer bg-white border-0">
+                    <a href="/appointments" class="btn btn-success w-100" disabled>
+                        <i class="bi bi-arrow-right"></i> Go to Appointments
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Consultation Management Card -->
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm feature-card">
+                <div class="card-body text-center">
+                    <i class="bi bi-clipboard-check-fill feature-icon text-info"></i>
+                    <h5 class="card-title mt-3">Consultations</h5>
+                    <p class="card-text">Record consultations, capture vitals, diagnosis, and generate prescriptions.</p>
+                </div>
+                <div class="card-footer bg-white border-0">
+                    <a href="/consultations" class="btn btn-info w-100" disabled>
+                        <i class="bi bi-arrow-right"></i> Go to Consultations
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Patient History Card -->
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm feature-card">
+                <div class="card-body text-center">
+                    <i class="bi bi-clock-history feature-icon text-warning"></i>
+                    <h5 class="card-title mt-3">Patient History</h5>
+                    <p class="card-text">View patient visit history, filter by date, and review past consultations.</p>
+                </div>
+                <div class="card-footer bg-white border-0">
+                    <a href="/history" class="btn btn-warning w-100" disabled>
+                        <i class="bi bi-arrow-right"></i> Go to History
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Export Card -->
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm feature-card">
+                <div class="card-body text-center">
+                    <i class="bi bi-file-earmark-excel-fill feature-icon text-success"></i>
+                    <h5 class="card-title mt-3">Data Export</h5>
+                    <p class="card-text">Export patient data and medical records to Excel or PDF formats.</p>
+                </div>
+                <div class="card-footer bg-white border-0">
+                    <a href="/export" class="btn btn-success w-100" disabled>
+                        <i class="bi bi-arrow-right"></i> Go to Export
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Status Card -->
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm feature-card">
+                <div class="card-body text-center">
+                    <i class="bi bi-speedometer2 feature-icon text-danger"></i>
+                    <h5 class="card-title mt-3">System Status</h5>
+                    <p class="card-text">Check system health, database connectivity, and application status.</p>
+                </div>
+                <div class="card-footer bg-white border-0">
+                    <a href="/health" class="btn btn-danger w-100" disabled>
+                        <i class="bi bi-arrow-right"></i> Check Status
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats Section -->
+    <div class="row mt-5">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Quick Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <h6 class="text-muted">Registered Patients</h6>
+                            <h3 class="text-primary">--</h3>
+                        </div>
+                        <div class="col-md-3">
+                            <h6 class="text-muted">Scheduled Appointments</h6>
+                            <h3 class="text-success">--</h3>
+                        </div>
+                        <div class="col-md-3">
+                            <h6 class="text-muted">Today's Consultations</h6>
+                            <h3 class="text-info">--</h3>
+                        </div>
+                        <div class="col-md-3">
+                            <h6 class="text-muted">Pending Actions</h6>
+                            <h3 class="text-warning">--</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .dashboard-container {
+        padding: 20px;
+    }
+
+    .feature-icon {
+        font-size: 3rem;
+    }
+
+    .feature-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .feature-card .btn:disabled {
+        opacity: 0.5;
+    }
+</style>
