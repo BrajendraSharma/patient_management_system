@@ -1,21 +1,24 @@
 @page "/login"
+@using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.Forms
-@using Microsoft.JSInterop
 @using System.ComponentModel.DataAnnotations
-@using System.Net.Http.Json
-@inject HttpClient Http
+@using ClinicalPatientManagement.Client.Services
+@inject CustomAuthStateProvider AuthStateProvider
 @inject NavigationManager Navigation
-@inject IJSRuntime JSRuntime
 
 <div class="d-flex justify-content-center mt-5">
     <div class="card shadow-sm" style="width: 100%; max-width: 460px;">
         <div class="card-body p-4">
-            <h3 class="card-title mb-3">Sign In</h3>
+            <div class="text-center mb-4">
+                <i class="bi bi-hospital" style="font-size: 2rem; color: #0d6efd;"></i>
+                <h3 class="card-title mt-2">Clinical Patient Management</h3>
+            </div>
 
             @if (!string.IsNullOrEmpty(errorMessage))
             {
-                <div class="alert alert-danger" role="alert" aria-live="assertive">
+                <div class="alert alert-danger alert-dismissible fade show" role="alert" aria-live="assertive">
                     @errorMessage
+                    <button type="button" class="btn-close" @onclick="() => errorMessage = string.Empty"></button>
                 </div>
             }
 
@@ -25,13 +28,13 @@
 
                 <div class="mb-3">
                     <label for="username" class="form-label">Username</label>
-                    <InputText id="username" @bind-Value="loginModel.Username" class="form-control" />
+                    <InputText id="username" @bind-Value="loginModel.Username" class="form-control" placeholder="Enter your username" />
                     <ValidationMessage For="() => loginModel.Username" />
                 </div>
 
                 <div class="mb-4">
                     <label for="password" class="form-label">Password</label>
-                    <InputText id="password" type="password" class="form-control" @bind-Value="loginModel.Password" />
+                    <InputText id="password" type="password" class="form-control" placeholder="Enter your password" @bind-Value="loginModel.Password" />
                     <ValidationMessage For="() => loginModel.Password" />
                 </div>
 
@@ -44,8 +47,8 @@
                 </button>
             </EditForm>
 
-            <div class="text-center mt-3 text-muted">
-                Use your application username and password to sign in.
+            <div class="text-center mt-3 text-muted small">
+                Demo credentials: username=admin, password=password
             </div>
         </div>
     </div>
@@ -56,7 +59,7 @@
     private string errorMessage = string.Empty;
     private bool isLoading = false;
 
-    private string buttonText => isLoading ? "Logging in..." : "Login";
+    private string buttonText => isLoading ? "Signing in..." : "Sign In";
 
     private async Task HandleLogin()
     {
@@ -65,36 +68,20 @@
 
         try
         {
-            var response = await Http.PostAsJsonAsync("api/auth/login", loginModel);
-            if (response.IsSuccessStatusCode)
-            {
-                var result = await response.Content.ReadFromJsonAsync<LoginResponse>();
-                if (result != null && !string.IsNullOrWhiteSpace(result.Token))
-                {
-                    await JSRuntime.InvokeVoidAsync("localStorage.setItem", "authToken", result.Token);
-                    Http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", result.Token);
-                    Navigation.NavigateTo("/");
-                    return;
-                }
-
-                errorMessage = "Unexpected response from the server.";
-            }
-            else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-            {
-                errorMessage = "Invalid username or password.";
-            }
-            else
-            {
-                errorMessage = "Unable to connect to the authentication service.";
-            }
+            await AuthStateProvider.LoginAsync(loginModel.Username, loginModel.Password);
+            Navigation.NavigateTo("/dashboard");
         }
         catch (HttpRequestException)
         {
             errorMessage = "Unable to reach the API. Check that the server is running.";
         }
-        catch (Exception)
+        catch (UnauthorizedAccessException)
         {
-            errorMessage = "An unexpected error occurred. Please try again.";
+            errorMessage = "Invalid username or password.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message ?? "An unexpected error occurred. Please try again.";
         }
         finally
         {
@@ -109,10 +96,5 @@
 
         [Required(ErrorMessage = "Password is required")]
         public string Password { get; set; } = string.Empty;
-    }
-
-    private class LoginResponse
-    {
-        public string Token { get; set; } = string.Empty;
     }
 }

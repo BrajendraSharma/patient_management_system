@@ -3,6 +3,7 @@
 @using ClinicalPatientManagement.Client.Services
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Components.Forms
+@attribute [Authorize]
 @inject IPatientApiClient PatientApiClient
 @inject NavigationManager Navigation
 
