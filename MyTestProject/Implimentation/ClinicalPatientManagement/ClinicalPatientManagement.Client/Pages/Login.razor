@@ -3,7 +3,7 @@
 @using Microsoft.AspNetCore.Components.Forms
 @using System.ComponentModel.DataAnnotations
 @using ClinicalPatientManagement.Client.Services
-@inject CustomAuthStateProvider AuthStateProvider
+@inject IAuthService AuthService
 @inject NavigationManager Navigation
 
 <div class="d-flex justify-content-center mt-5">
@@ -68,8 +68,16 @@
 
         try
         {
-            await AuthStateProvider.LoginAsync(loginModel.Username, loginModel.Password);
-            Navigation.NavigateTo("/dashboard");
+            var result = await AuthService.LoginAsync(loginModel.Username, loginModel.Password);
+            
+            if (result != null && !string.IsNullOrEmpty(result.Token))
+            {
+                Navigation.NavigateTo("/dashboard");
+            }
+            else
+            {
+                errorMessage = "Invalid username or password.";
+            }
         }
         catch (HttpRequestException)
         {
