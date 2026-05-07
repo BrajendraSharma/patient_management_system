@@ -17,8 +17,12 @@ public class MappingProfile : Profile
         CreateMap<CreatePatientDto, Patient>();
         CreateMap<UpdatePatientDto, Patient>();
         
+        // Step 7: Appointment Scheduling mappings
+        CreateMap<Appointment, AppointmentDto>().ReverseMap();
+        CreateMap<CreateAppointmentDto, Appointment>();
+        CreateMap<UpdateAppointmentDto, Appointment>();
+        
         // Future steps will add more mappings here
-        // CreateMap<Appointment, AppointmentDto>().ReverseMap();
         // CreateMap<Consultation, ConsultationDto>().ReverseMap();
     }
 }

@@ -1,66 +1,120 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components
 @using ClinicalPatientManagement.Client.Services
+@implements IAsyncDisposable
 @inject AuthenticationStateProvider AuthenticationStateProvider
-@inject NavigationManager NavManager
 @inject IAuthService AuthService
+@inject IAuthStateService AuthStateService
+@inject NavigationManager NavManager
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
     <div class="container-fluid">
-        <a class="navbar-brand" href="/dashboard">
+        <a class="navbar-brand" href="/">
             <i class="bi bi-hospital"></i> Clinical Patient Management
         </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">
-                <AuthorizeView>
-                    <Authorized>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="bi bi-person-circle"></i>
-                                @(authenticatedUsername ?? "User")
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="/dashboard"><i class="bi bi-house"></i> Dashboard</a></li>
-                                <li><a class="dropdown-item" href="/patients"><i class="bi bi-people"></i> Patients</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="#" @onclick="HandleLogout"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
-                            </ul>
-                        </li>
-                    </Authorized>
-                    <NotAuthorized>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/login">
-                                <i class="bi bi-box-arrow-in-right"></i> Login
-                            </a>
-                        </li>
-                    </NotAuthorized>
-                </AuthorizeView>
+                @if (isAuthenticated)
+                {
+                    <!-- Authenticated User -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-person-circle"></i>
+                            @(authenticatedUsername ?? "User")
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="/dashboard"><i class="bi bi-house"></i> Dashboard</a></li>
+                            <li><a class="dropdown-item" href="/patients"><i class="bi bi-people"></i> Patients</a></li>
+                            <li><a class="dropdown-item" href="/appointments"><i class="bi bi-calendar-check"></i> Appointments</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" @onclick="HandleLogout" @onclick:preventDefault="true">
+                                <i class="bi bi-box-arrow-right"></i> Logout
+                            </a></li>
+                        </ul>
+                    </li>
+                }
+                else
+                {
+                    <!-- Unauthenticated User -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="/login">
+                            <i class="bi bi-box-arrow-in-right"></i> Login
+                        </a>
+                    </li>
+                }
             </ul>
         </div>
     </div>
 </nav>
 
 @code {
+#pragma warning disable CS1998
     private string? authenticatedUsername;
+    private bool isAuthenticated = false;
 
     protected override async Task OnInitializedAsync()
     {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        if (authState.User?.Identity?.IsAuthenticated == true)
+        // Get initial auth state
+        await UpdateAuthState();
+
+        // Subscribe to auth state changes
+        if (AuthStateService is AuthStateService authStateService)
         {
-            authenticatedUsername = authState.User?.FindFirst("sub")?.Value ?? "User";
+            authStateService.OnAuthStateChanged += OnAuthStateChanged;
         }
+    }
+
+    private async Task UpdateAuthState()
+    {
+        // Get the authentication state directly from the provider
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        isAuthenticated = authState.User?.Identity?.IsAuthenticated ?? false;
+        
+        if (isAuthenticated)
+        {
+            authenticatedUsername = authState.User?.FindFirst(c => c.Type == "sub")?.Value ?? 
+                                  authState.User?.Identity?.Name ?? "User";
+        }
+        else
+        {
+            authenticatedUsername = null;
+        }
+    }
+
+    private async Task OnAuthStateChangedAsync()
+    {
+        await UpdateAuthState();
+        StateHasChanged();
+    }
+
+    private void OnAuthStateChanged()
+    {
+        _ = OnAuthStateChangedAsync();
     }
 
     private async Task HandleLogout()
     {
+        // Clear the token and notify auth state
         if (AuthenticationStateProvider is CustomAuthStateProvider customProvider)
         {
             await customProvider.LogoutAsync();
-            NavManager.NavigateTo("/login", forceLoad: true);
+            AuthStateService.NotifyAuthStateChanged();
+        }
+
+        // Redirect to login
+        NavManager.NavigateTo("/login", forceLoad: true);
+    }
+
+    async ValueTask IAsyncDisposable.DisposeAsync()
+    {
+        if (AuthStateService is AuthStateService authStateService)
+        {
+            authStateService.OnAuthStateChanged -= OnAuthStateChanged;
         }
     }
+#pragma warning restore CS1998
 }
+

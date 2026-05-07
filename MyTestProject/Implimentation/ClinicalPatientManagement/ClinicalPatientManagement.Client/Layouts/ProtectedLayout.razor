@@ -1,0 +1,71 @@
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Authorization
+@using ClinicalPatientManagement.Client.Components
+@inherits LayoutComponentBase
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<div class="app-layout">
+    <Navigation />
+    
+    <main role="main" class="main-content">
+        <AuthorizeView>
+            <Authorized>
+                <div class="container-fluid">
+                    @Body
+                </div>
+            </Authorized>
+            <NotAuthorized>
+                @{
+                    // Force redirect to login
+                    Navigation.NavigateTo("/login", replace: true);
+                }
+            </NotAuthorized>
+        </AuthorizeView>
+    </main>
+</div>
+
+<div id="blazor-error-ui">
+    An unhandled error has occurred.
+    <a href="" class="reload">Reload</a>
+    <a class="dismiss">🗙</a>
+</div>
+
+<style>
+    .app-layout {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+
+    .main-content {
+        flex: 1;
+        padding: 20px 0;
+    }
+
+    #blazor-error-ui {
+        background: lightyellow;
+        bottom: 0;
+        box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+        display: none;
+        left: 0;
+        padding: 10px 16px;
+        position: fixed;
+        right: 0;
+        text-align: center;
+        width: 100%;
+        z-index: 1000;
+    }
+
+    #blazor-error-ui .dismiss {
+        cursor: pointer;
+        position: absolute;
+        right: 3.5rem;
+        top: 0.5rem;
+    }
+
+    #blazor-error-ui .dismiss:hover {
+        color: #fff;
+        text-decoration: underline;
+    }
+</style>

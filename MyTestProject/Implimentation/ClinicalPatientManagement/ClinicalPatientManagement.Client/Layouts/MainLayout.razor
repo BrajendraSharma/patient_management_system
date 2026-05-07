@@ -1,6 +1,9 @@
 @using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components
 @using ClinicalPatientManagement.Client.Components
 @inherits LayoutComponentBase
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <div class="app-layout">
     <Navigation />
@@ -13,17 +16,29 @@
                 </div>
             </Authorized>
             <NotAuthorized>
-                <div class="container">
-                    <div class="row justify-content-center mt-5">
-                        <div class="col-md-6">
-                            <div class="alert alert-info text-center">
-                                <h4><i class="bi bi-exclamation-circle"></i> Access Denied</h4>
-                                <p>You must be logged in to access this page.</p>
-                                <a href="/login" class="btn btn-primary">Go to Login</a>
+                <!-- Check if the current page is public (login or index) -->
+                @if (IsPublicPage())
+                {
+                    <!-- Show public page content -->
+                    <div class="container-fluid">
+                        @Body
+                    </div>
+                }
+                else
+                {
+                    <!-- Block protected page access -->
+                    <div class="container">
+                        <div class="row justify-content-center mt-5">
+                            <div class="col-md-6">
+                                <div class="alert alert-warning text-center">
+                                    <h4><i class="bi bi-shield-exclamation"></i> Access Denied</h4>
+                                    <p>You must be logged in to access this page.</p>
+                                    <a href="/login" class="btn btn-primary">Go to Login</a>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                }
             </NotAuthorized>
         </AuthorizeView>
     </main>
@@ -36,6 +51,29 @@
 </div>
 
 @code {
+    private bool IsPublicPage()
+    {
+        try
+        {
+            // Parse the URI to get just the path
+            var uri = new Uri(Navigation.Uri);
+            var path = uri.AbsolutePath.ToLowerInvariant();
+            
+            // Remove trailing slash for consistent comparison
+            if (path.EndsWith("/") && path.Length > 1)
+            {
+                path = path.Substring(0, path.Length - 1);
+            }
+            
+            // Public pages: /, /login
+            return path == "" || path == "/" || path == "/login";
+        }
+        catch
+        {
+            // Default to false (protect by default)
+            return false;
+        }
+    }
 }
 
 <style>

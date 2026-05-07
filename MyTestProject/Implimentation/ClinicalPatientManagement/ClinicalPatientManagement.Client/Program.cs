@@ -28,10 +28,14 @@ builder.Services.AddHttpClient("ClinicalApi", client =>
 // Step 4.5: Register Authentication Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
+builder.Services.AddScoped<IAuthStateService, AuthStateService>();
 builder.Services.AddAuthorizationCore();
 
 // Step 6: Register Patient API Client
 builder.Services.AddScoped<IPatientApiClient, PatientApiClient>();
+
+// Step 7: Register Appointment API Client
+builder.Services.AddScoped<IAppointmentApiClient, AppointmentApiClient>();
 
 var host = builder.Build();
 

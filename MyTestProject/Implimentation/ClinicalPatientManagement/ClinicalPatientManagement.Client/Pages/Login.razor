@@ -4,6 +4,8 @@
 @using System.ComponentModel.DataAnnotations
 @using ClinicalPatientManagement.Client.Services
 @inject IAuthService AuthService
+@inject IAuthStateService AuthStateService
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager Navigation
 
 <div class="d-flex justify-content-center mt-5">
@@ -61,6 +63,16 @@
 
     private string buttonText => isLoading ? "Signing in..." : "Sign In";
 
+    protected override async Task OnInitializedAsync()
+    {
+        // Redirect to dashboard if already authenticated
+        var isAuthenticated = await AuthStateService.IsAuthenticatedAsync();
+        if (isAuthenticated)
+        {
+            Navigation.NavigateTo("/dashboard", replace: true);
+        }
+    }
+
     private async Task HandleLogin()
     {
         isLoading = true;
@@ -72,7 +84,14 @@
             
             if (result != null && !string.IsNullOrEmpty(result.Token))
             {
-                Navigation.NavigateTo("/dashboard");
+                // Notify auth state service of the change
+                if (AuthenticationStateProvider is CustomAuthStateProvider customProvider)
+                {
+                    await customProvider.LoginAsync(loginModel.Username, loginModel.Password);
+                    AuthStateService.NotifyAuthStateChanged();
+                }
+
+                Navigation.NavigateTo("/dashboard", replace: true);
             }
             else
             {
