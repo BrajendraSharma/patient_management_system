@@ -1,0 +1,227 @@
+@page "/prescription/{PrescriptionId:int}"
+@using System.Globalization
+@using ClinicalPatientManagement.Client.Models
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<PageTitle>Prescription - View & Print</PageTitle>
+
+<div class="prescription-container">
+    @if (isLoading)
+    {
+        <div class="alert alert-info">Loading prescription...</div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+        <button class="btn btn-secondary" @onclick="GoBack">Back</button>
+    }
+    else if (prescription == null)
+    {
+        <div class="alert alert-warning">Prescription not found.</div>
+        <button class="btn btn-secondary" @onclick="GoBack">Back</button>
+    }
+    else
+    {
+        <div class="prescription-header no-print">
+            <button class="btn btn-primary" @onclick="PrintPrescription">Print</button>
+            <button class="btn btn-secondary" @onclick="GoBack">Back</button>
+        </div>
+
+        <div class="prescription-content">
+            <div class="clinic-header">
+                <h2>Clinical Patient Management System</h2>
+                <p>Prescription Report</p>
+            </div>
+
+            <div class="prescription-section">
+                <strong>Prescription ID:</strong> @prescription.Id
+                <br/>
+                <strong>Date:</strong> @prescription.PrescriptionDate.ToString("dd-MM-yyyy")
+                <br/>
+                <strong>Consultation ID:</strong> @prescription.ConsultationId
+            </div>
+
+            @if (prescription.Consultation?.Appointment?.Patient != null)
+            {
+                <div class="prescription-section">
+                    <h4>Patient Information</h4>
+                    <p><strong>Name:</strong> @prescription.Consultation.Appointment.Patient.Name</p>
+                    <p><strong>Age:</strong> @prescription.Consultation.Appointment.Patient.Age</p>
+                    <p><strong>Phone:</strong> @prescription.Consultation.Appointment.Patient.PhoneNumber</p>
+                </div>
+            }
+
+            @if (prescription.Consultation != null)
+            {
+                <div class="prescription-section">
+                    <h4>Consultation Details</h4>
+                    <p><strong>Temperature:</strong> @prescription.Consultation.Temperature°C</p>
+                    <p><strong>Blood Pressure:</strong> @prescription.Consultation.BloodPressure</p>
+                    <p><strong>Pulse:</strong> @prescription.Consultation.Pulse bpm</p>
+                    <p><strong>Complaints:</strong> @prescription.Consultation.Complaints</p>
+                    <p><strong>Diagnosis:</strong> @prescription.Consultation.Diagnosis</p>
+                </div>
+            }
+
+            @if (prescription.Medications != null && prescription.Medications.Any())
+            {
+                <div class="prescription-section">
+                    <h4>Medications</h4>
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Medication</th>
+                                <th>Dosage</th>
+                                <th>Frequency</th>
+                                <th>Duration (days)</th>
+                                <th>Instructions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var med in prescription.Medications)
+                            {
+                                <tr>
+                                    <td>@med.Name</td>
+                                    <td>@med.Dosage</td>
+                                    <td>@med.Frequency</td>
+                                    <td>@med.Duration</td>
+                                    <td>@med.Instructions</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<style>
+    .prescription-container {
+        max-width: 900px;
+        margin: 20px auto;
+        padding: 20px;
+        background: white;
+    }
+
+    .prescription-header.no-print {
+        margin-bottom: 20px;
+    }
+
+    .prescription-header.no-print button {
+        margin-right: 10px;
+    }
+
+    .prescription-content {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+    }
+
+    .clinic-header {
+        text-align: center;
+        margin-bottom: 30px;
+        border-bottom: 2px solid #333;
+        padding-bottom: 15px;
+    }
+
+    .prescription-section {
+        margin-bottom: 20px;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+
+    .prescription-section h4 {
+        margin-top: 0;
+        color: #333;
+    }
+
+    .prescription-section p {
+        margin: 5px 0;
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+    }
+
+    .table th, .table td {
+        padding: 8px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .table th {
+        background-color: #f5f5f5;
+        font-weight: bold;
+    }
+
+    @@media print {
+        .no-print {
+            display: none !important;
+        }
+
+        .prescription-container {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: white;
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .prescription-container {
+            padding: 10px;
+        }
+
+        .table th, .table td {
+            padding: 5px;
+            font-size: 12px;
+        }
+    }
+</style>
+
+@code {
+    [Parameter]
+    public int PrescriptionId { get; set; }
+
+    private PrescriptionViewModel? prescription;
+    private string? errorMessage;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            isLoading = true;
+            prescription = await Http.GetFromJsonAsync<PrescriptionViewModel>($"/api/prescriptions/{PrescriptionId}");
+            
+            if (prescription == null)
+            {
+                errorMessage = "Prescription not found.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading prescription: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void PrintPrescription()
+    {
+        // Browser print functionality
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/consultations");
+    }
+}

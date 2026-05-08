@@ -1,0 +1,115 @@
+
+C:\Project\PracticeProject\githubCopilot\AI_Training\MyTestProject\Implimentati
+on\ClinicalPatientManagement\ClinicalPatientManagement.Api.Tests\PrescriptionSe
+rviceTests.cs(97,25): error CS0854: An expression tree may not contain a call 
+or invocation that uses optional arguments [C:\Project\PracticeProject\githubCo
+pilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\Clinic
+alPatientManagement.Api.Tests\ClinicalPatientManagement.Api.Tests.csproj]
+C:\Project\PracticeProject\githubCopilot\AI_Training\MyTestProject\Implimentati
+on\ClinicalPatientManagement\ClinicalPatientManagement.Api.Tests\PrescriptionSe
+rviceTests.cs(139,25): error CS0854: An expression tree may not contain a call 
+or invocation that uses optional arguments [C:\Project\PracticeProject\githubCo
+pilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\Clinic
+alPatientManagement.Api.Tests\ClinicalPatientManagement.Api.Tests.csproj]
+C:\Project\PracticeProject\githubCopilot\AI_Training\MyTestProject\Implimentati
+on\ClinicalPatientManagement\ClinicalPatientManagement.Api.Tests\PrescriptionSe
+rviceTests.cs(179,25): error CS0854: An expression tree may not contain a call 
+or invocation that uses optional arguments [C:\Project\PracticeProject\githubCo
+pilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\Clinic
+alPatientManagement.Api.Tests\ClinicalPatientManagement.Api.Tests.csproj]
+C:\Project\PracticeProject\githubCopilot\AI_Training\MyTestProject\Implimentati
+on\ClinicalPatientManagement\ClinicalPatientManagement.Api.Tests\PrescriptionSe
+rviceTests.cs(203,25): error CS0854: An expression tree may not contain a call 
+or invocation that uses optional arguments [C:\Project\PracticeProject\githubCo
+pilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\Clinic
+alPatientManagement.Api.Tests\ClinicalPatientManagement.Api.Tests.csproj]
+C:\Project\PracticeProject\githubCopilot\AI_Training\MyTestProject\Implimentati
+on\ClinicalPatientManagement\ClinicalPatientManagement.Api.Tests\PrescriptionSe
+rviceTests.cs(219,25): error CS0854: An expression tree may not contain a call 
+or invocation that uses optional arguments [C:\Project\PracticeProject\githubCo
+pilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\Clinic
+alPatientManagement.Api.Tests\ClinicalPatientManagement.Api.Tests.csproj]
+C:\Project\PracticeProject\githubCopilot\AI_Training\MyTestProject\Implimentati
+on\ClinicalPatientManagement\ClinicalPatientManagement.Api.Tests\PrescriptionSe
+rviceTests.cs(278,25): error CS0854: An expression tree may not contain a call 
+or invocation that uses optional arguments [C:\Project\PracticeProject\githubCo
+pilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\Clinic
+alPatientManagement.Api.Tests\ClinicalPatientManagement.Api.Tests.csproj]
+C:\Project\PracticeProject\githubCopilot\AI_Training\MyTestProject\Implimentati
+on\ClinicalPatientManagement\ClinicalPatientManagement.Api.Tests\PrescriptionSe
+rviceTests.cs(282,25): error CS0854: An expression tree may not contain a call 
+or invocation that uses optional arguments [C:\Project\PracticeProject\githubCo
+pilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\Clinic
+alPatientManagement.Api.Tests\ClinicalPatientManagement.Api.Tests.csproj]
+C:\Project\PracticeProject\githubCopilot\AI_Training\MyTestProject\Implimentati
+on\ClinicalPatientManagement\ClinicalPatientManagement.Api.Tests\PrescriptionSe
+rviceTests.cs(315,63): error CS1503: Argument 1: cannot convert from 
+'ClinicalPatientManagement.Api.Models.Prescription' to 'int' [C:\Project\Practi
+ceProject\githubCopilot\AI_Training\MyTestProject\Implimentation\ClinicalPatien
+tManagement\ClinicalPatientManagement.Api.Tests\ClinicalPatientManagement.Api.T
+ests.csproj]
+C:\Project\PracticeProject\githubCopilot\AI_Training\MyTestProject\Implimentati
+on\ClinicalPatientManagement\ClinicalPatientManagement.Api.Tests\PrescriptionSe
+rviceTests.cs(308,25): error CS0854: An expression tree may not contain a call 
+or invocation that uses optional arguments [C:\Project\PracticeProject\githubCo
+pilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\Clinic
+alPatientManagement.Api.Tests\ClinicalPatientManagement.Api.Tests.csproj]
+C:\Project\PracticeProject\githubCopilot\AI_Training\MyTestProject\Implimentati
+on\ClinicalPatientManagement\ClinicalPatientManagement.Api.Tests\PrescriptionSe
+rviceTests.cs(97,25): error CS0854: An expression tree may not contain a call 
+or invocation that uses optional arguments [C:\Project\PracticeProject\githubCo
+pilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\Clinic
+alPatientManagement.Api.Tests\ClinicalPatientManagement.Api.Tests.csproj]
+C:\Project\PracticeProject\githubCopilot\AI_Training\MyTestProject\Implimentati
+on\ClinicalPatientManagement\ClinicalPatientManagement.Api.Tests\PrescriptionSe
+rviceTests.cs(139,25): error CS0854: An expression tree may not contain a call 
+or invocation that uses optional arguments [C:\Project\PracticeProject\githubCo
+pilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\Clinic
+alPatientManagement.Api.Tests\ClinicalPatientManagement.Api.Tests.csproj]
+C:\Project\PracticeProject\githubCopilot\AI_Training\MyTestProject\Implimentati
+on\ClinicalPatientManagement\ClinicalPatientManagement.Api.Tests\PrescriptionSe
+rviceTests.cs(179,25): error CS0854: An expression tree may not contain a call 
+or invocation that uses optional arguments [C:\Project\PracticeProject\githubCo
+pilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\Clinic
+alPatientManagement.Api.Tests\ClinicalPatientManagement.Api.Tests.csproj]
+C:\Project\PracticeProject\githubCopilot\AI_Training\MyTestProject\Implimentati
+on\ClinicalPatientManagement\ClinicalPatientManagement.Api.Tests\PrescriptionSe
+rviceTests.cs(203,25): error CS0854: An expression tree may not contain a call 
+or invocation that uses optional arguments [C:\Project\PracticeProject\githubCo
+pilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\Clinic
+alPatientManagement.Api.Tests\ClinicalPatientManagement.Api.Tests.csproj]
+C:\Project\PracticeProject\githubCopilot\AI_Training\MyTestProject\Implimentati
+on\ClinicalPatientManagement\ClinicalPatientManagement.Api.Tests\PrescriptionSe
+rviceTests.cs(219,25): error CS0854: An expression tree may not contain a call 
+or invocation that uses optional arguments [C:\Project\PracticeProject\githubCo
+pilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\Clinic
+alPatientManagement.Api.Tests\ClinicalPatientManagement.Api.Tests.csproj]
+C:\Project\PracticeProject\githubCopilot\AI_Training\MyTestProject\Implimentati
+on\ClinicalPatientManagement\ClinicalPatientManagement.Api.Tests\PrescriptionSe
+rviceTests.cs(278,25): error CS0854: An expression tree may not contain a call 
+or invocation that uses optional arguments [C:\Project\PracticeProject\githubCo
+pilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\Clinic
+alPatientManagement.Api.Tests\ClinicalPatientManagement.Api.Tests.csproj]
+C:\Project\PracticeProject\githubCopilot\AI_Training\MyTestProject\Implimentati
+on\ClinicalPatientManagement\ClinicalPatientManagement.Api.Tests\PrescriptionSe
+rviceTests.cs(282,25): error CS0854: An expression tree may not contain a call 
+or invocation that uses optional arguments [C:\Project\PracticeProject\githubCo
+pilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\Clinic
+alPatientManagement.Api.Tests\ClinicalPatientManagement.Api.Tests.csproj]
+C:\Project\PracticeProject\githubCopilot\AI_Training\MyTestProject\Implimentati
+on\ClinicalPatientManagement\ClinicalPatientManagement.Api.Tests\PrescriptionSe
+rviceTests.cs(315,63): error CS1503: Argument 1: cannot convert from 
+'ClinicalPatientManagement.Api.Models.Prescription' to 'int' [C:\Project\Practi
+ceProject\githubCopilot\AI_Training\MyTestProject\Implimentation\ClinicalPatien
+tManagement\ClinicalPatientManagement.Api.Tests\ClinicalPatientManagement.Api.T
+ests.csproj]
+C:\Project\PracticeProject\githubCopilot\AI_Training\MyTestProject\Implimentati
+on\ClinicalPatientManagement\ClinicalPatientManagement.Api.Tests\PrescriptionSe
+rviceTests.cs(308,25): error CS0854: An expression tree may not contain a call 
+or invocation that uses optional arguments [C:\Project\PracticeProject\githubCo
+pilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\Clinic
+alPatientManagement.Api.Tests\ClinicalPatientManagement.Api.Tests.csproj]
+    9 Error(s)
+
+
+

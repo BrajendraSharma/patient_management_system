@@ -45,6 +45,11 @@ public static class DependencyInjectionExtensions
         services.AddScoped<IConsultationRepository>(sp => sp.GetRequiredService<ConsultationRepository>());
         services.AddScoped<IConsultationService, ConsultationService>();
 
+        // Step 10: Register Prescription Repository and Service
+        services.AddScoped<PrescriptionRepository>();
+        services.AddScoped<IPrescriptionRepository>(sp => sp.GetRequiredService<PrescriptionRepository>());
+        services.AddScoped<IPrescriptionService, PrescriptionService>();
+
         // Additional repositories and services will be added in future steps
 
         return services;

@@ -26,5 +26,13 @@ public class MappingProfile : Profile
         CreateMap<Consultation, ConsultationDto>().ReverseMap();
         CreateMap<CreateConsultationDto, Consultation>();
         CreateMap<UpdateConsultationDto, Consultation>();
+        
+        // Step 10: Prescription Generation mappings
+        CreateMap<Prescription, PrescriptionDto>().ReverseMap();
+        CreateMap<CreatePrescriptionDto, Prescription>();
+        CreateMap<UpdatePrescriptionDto, Prescription>();
+        CreateMap<Medication, MedicationDto>().ReverseMap();
+        CreateMap<CreateMedicationDto, Medication>();
+        CreateMap<UpdateMedicationDto, Medication>();
     }
 }
