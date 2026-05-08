@@ -385,4 +385,264 @@ public class PatientServiceTests
     }
 
     #endregion
+
+    #region SearchAsync Tests - Step 8: Enhanced Patient Search
+
+    /// <summary>
+    /// Test partial name matching (case-insensitive)
+    /// Requirement: Case-insensitive, partial match search by first and last name
+    /// </summary>
+    [Fact]
+    public async Task SearchAsync_WithPartialFirstName_ShouldReturnMatchingPatients()
+    {
+        // Arrange
+        var recentPatient = new Patient 
+        { 
+            Id = 1, 
+            FirstName = "Jonathan", 
+            LastName = "Doe", 
+            Phone = "1111111111", 
+            DateOfBirth = DateTime.Now.AddYears(-30), 
+            Gender = "Male",
+            CreatedAt = DateTime.UtcNow.AddMinutes(-5)
+        };
+        var olderPatient = new Patient 
+        { 
+            Id = 2, 
+            FirstName = "Johnny", 
+            LastName = "Smith", 
+            Phone = "2222222222", 
+            DateOfBirth = DateTime.Now.AddYears(-25), 
+            Gender = "Male",
+            CreatedAt = DateTime.UtcNow.AddMinutes(-10)
+        };
+
+        var patients = new List<Patient> { recentPatient, olderPatient };
+        var patientDtos = new List<PatientDto>
+        {
+            new PatientDto { Id = 1, FirstName = "Jonathan", LastName = "Doe" },
+            new PatientDto { Id = 2, FirstName = "Johnny", LastName = "Smith" }
+        };
+
+        _repositoryMock.Setup(r => r.SearchAsync("john", It.IsAny<CancellationToken>())).ReturnsAsync(patients);
+        _mapperMock.Setup(m => m.Map<IEnumerable<PatientDto>>(It.IsAny<IList<Patient>>())).Returns(patientDtos);
+
+        // Act
+        var result = await _service.SearchAsync("john");
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(2, result.Count());
+        _repositoryMock.Verify(r => r.SearchAsync("john", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>
+    /// Test case-insensitive search (uppercase input should match lowercase names)
+    /// Requirement: Case-insensitive search
+    /// </summary>
+    [Fact]
+    public async Task SearchAsync_WithUppercaseSearch_ShouldReturnLowercaseMatches()
+    {
+        // Arrange
+        var patient = new Patient 
+        { 
+            Id = 1, 
+            FirstName = "jane", 
+            LastName = "doe", 
+            Phone = "1234567890", 
+            DateOfBirth = DateTime.Now.AddYears(-25), 
+            Gender = "Female",
+            CreatedAt = DateTime.UtcNow
+        };
+        var patientDto = new PatientDto { Id = 1, FirstName = "jane", LastName = "doe" };
+
+        _repositoryMock.Setup(r => r.SearchAsync("JANE", It.IsAny<CancellationToken>())).ReturnsAsync(new List<Patient> { patient });
+        _mapperMock.Setup(m => m.Map<IEnumerable<PatientDto>>(It.IsAny<IList<Patient>>())).Returns(new List<PatientDto> { patientDto });
+
+        // Act
+        var result = await _service.SearchAsync("JANE");
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Single(result);
+        Assert.Equal("jane", result.First().FirstName);
+        _repositoryMock.Verify(r => r.SearchAsync("JANE", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>
+    /// Test phone number search (case-insensitive)
+    /// Requirement: Case-insensitive partial match search by phone
+    /// </summary>
+    [Fact]
+    public async Task SearchAsync_WithPhoneNumber_ShouldReturnMatchingPatients()
+    {
+        // Arrange
+        var patient = new Patient 
+        { 
+            Id = 1, 
+            FirstName = "John", 
+            LastName = "Doe", 
+            Phone = "5551234567", 
+            DateOfBirth = DateTime.Now.AddYears(-30), 
+            Gender = "Male",
+            CreatedAt = DateTime.UtcNow
+        };
+        var patientDto = new PatientDto { Id = 1, FirstName = "John", LastName = "Doe" };
+
+        _repositoryMock.Setup(r => r.SearchAsync("555", It.IsAny<CancellationToken>())).ReturnsAsync(new List<Patient> { patient });
+        _mapperMock.Setup(m => m.Map<IEnumerable<PatientDto>>(It.IsAny<IList<Patient>>())).Returns(new List<PatientDto> { patientDto });
+
+        // Act
+        var result = await _service.SearchAsync("555");
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Single(result);
+        _repositoryMock.Verify(r => r.SearchAsync("555", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>
+    /// Test ordering by most recent first (CreatedAt DESC)
+    /// Requirement: Results ordered by recent (most recent first)
+    /// </summary>
+    [Fact]
+    public async Task SearchAsync_ShouldReturnResultsOrderedByMostRecentFirst()
+    {
+        // Arrange
+        var recentPatient = new Patient 
+        { 
+            Id = 3, 
+            FirstName = "Robert", 
+            LastName = "Johnson", 
+            Phone = "3333333333", 
+            DateOfBirth = DateTime.Now.AddYears(-40), 
+            Gender = "Male",
+            CreatedAt = DateTime.UtcNow
+        };
+        var middlePatient = new Patient 
+        { 
+            Id = 2, 
+            FirstName = "Mary", 
+            LastName = "Johnson", 
+            Phone = "2222222222", 
+            DateOfBirth = DateTime.Now.AddYears(-35), 
+            Gender = "Female",
+            CreatedAt = DateTime.UtcNow.AddMinutes(-5)
+        };
+        var oldestPatient = new Patient 
+        { 
+            Id = 1, 
+            FirstName = "John", 
+            LastName = "Johnson", 
+            Phone = "1111111111", 
+            DateOfBirth = DateTime.Now.AddYears(-50), 
+            Gender = "Male",
+            CreatedAt = DateTime.UtcNow.AddMinutes(-10)
+        };
+
+        // Ordered by CreatedAt DESC (most recent first)
+        var patients = new List<Patient> { recentPatient, middlePatient, oldestPatient };
+        var patientDtos = new List<PatientDto>
+        {
+            new PatientDto { Id = 3, FirstName = "Robert", LastName = "Johnson" },
+            new PatientDto { Id = 2, FirstName = "Mary", LastName = "Johnson" },
+            new PatientDto { Id = 1, FirstName = "John", LastName = "Johnson" }
+        };
+
+        _repositoryMock.Setup(r => r.SearchAsync("johnson", It.IsAny<CancellationToken>())).ReturnsAsync(patients);
+        _mapperMock.Setup(m => m.Map<IEnumerable<PatientDto>>(It.IsAny<IList<Patient>>())).Returns(patientDtos);
+
+        // Act
+        var result = await _service.SearchAsync("johnson");
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(3, result.Count());
+        // Verify order: most recent (ID 3) should be first
+        var resultList = result.ToList();
+        Assert.Equal(3, resultList[0].Id);
+        Assert.Equal(2, resultList[1].Id);
+        Assert.Equal(1, resultList[2].Id);
+    }
+
+    /// <summary>
+    /// Test empty search term returns all patients ordered by recent
+    /// </summary>
+    [Fact]
+    public async Task SearchAsync_WithEmptySearchTerm_ShouldReturnAllPatients()
+    {
+        // Arrange
+        var patients = new List<Patient>
+        {
+            new Patient { Id = 1, FirstName = "John", LastName = "Doe", Phone = "1111111111", DateOfBirth = DateTime.Now.AddYears(-30), Gender = "Male", CreatedAt = DateTime.UtcNow },
+            new Patient { Id = 2, FirstName = "Jane", LastName = "Smith", Phone = "2222222222", DateOfBirth = DateTime.Now.AddYears(-25), Gender = "Female", CreatedAt = DateTime.UtcNow.AddMinutes(-5) }
+        };
+        var patientDtos = new List<PatientDto>
+        {
+            new PatientDto { Id = 1, FirstName = "John", LastName = "Doe" },
+            new PatientDto { Id = 2, FirstName = "Jane", LastName = "Smith" }
+        };
+
+        _repositoryMock.Setup(r => r.SearchAsync("", It.IsAny<CancellationToken>())).ReturnsAsync(patients);
+        _mapperMock.Setup(m => m.Map<IEnumerable<PatientDto>>(It.IsAny<IList<Patient>>())).Returns(patientDtos);
+
+        // Act
+        var result = await _service.SearchAsync("");
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(2, result.Count());
+    }
+
+    /// <summary>
+    /// Test no results found for non-matching search term
+    /// </summary>
+    [Fact]
+    public async Task SearchAsync_WithNonMatchingTerm_ShouldReturnEmptyList()
+    {
+        // Arrange
+        _repositoryMock.Setup(r => r.SearchAsync("nonexistent", It.IsAny<CancellationToken>())).ReturnsAsync(new List<Patient>());
+        _mapperMock.Setup(m => m.Map<IEnumerable<PatientDto>>(It.IsAny<IList<Patient>>())).Returns(new List<PatientDto>());
+
+        // Act
+        var result = await _service.SearchAsync("nonexistent");
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Empty(result);
+    }
+
+    /// <summary>
+    /// Test last name search (case-insensitive)
+    /// Requirement: Case-insensitive, partial match search by last name
+    /// </summary>
+    [Fact]
+    public async Task SearchAsync_WithLastNameSearch_ShouldReturnMatchingPatients()
+    {
+        // Arrange
+        var patient = new Patient 
+        { 
+            Id = 1, 
+            FirstName = "John", 
+            LastName = "Smithson", 
+            Phone = "1234567890", 
+            DateOfBirth = DateTime.Now.AddYears(-30), 
+            Gender = "Male",
+            CreatedAt = DateTime.UtcNow
+        };
+        var patientDto = new PatientDto { Id = 1, FirstName = "John", LastName = "Smithson" };
+
+        _repositoryMock.Setup(r => r.SearchAsync("smith", It.IsAny<CancellationToken>())).ReturnsAsync(new List<Patient> { patient });
+        _mapperMock.Setup(m => m.Map<IEnumerable<PatientDto>>(It.IsAny<IList<Patient>>())).Returns(new List<PatientDto> { patientDto });
+
+        // Act
+        var result = await _service.SearchAsync("smith");
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Single(result);
+        Assert.Equal("Smithson", result.First().LastName);
+    }
+
+    #endregion
 }

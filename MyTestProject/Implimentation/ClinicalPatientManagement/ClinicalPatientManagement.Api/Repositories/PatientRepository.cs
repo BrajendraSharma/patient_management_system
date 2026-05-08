@@ -107,20 +107,22 @@ public class PatientRepository : IPatientRepository
 
     /// <summary>
     /// Search patients by name or phone (case-insensitive, partial match)
-    /// Requirement Step 8: Enhance patient search
+    /// Results ordered by CreatedAt DESC (most recent first)
+    /// Requirement Step 8: Enhance patient search with recent-first ordering
     /// </summary>
     public async Task<IList<Patient>> SearchAsync(string searchTerm, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(searchTerm))
-            return await GetAll().ToListAsync(cancellationToken);
+            return await GetAll()
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync(cancellationToken);
 
         var lowerSearch = searchTerm.ToLower();
         return await _context.Patients
             .Where(p => p.FirstName.ToLower().Contains(lowerSearch) ||
                         p.LastName.ToLower().Contains(lowerSearch) ||
-                        p.Phone.Contains(searchTerm))
-            .OrderBy(p => p.FirstName)
-            .ThenBy(p => p.LastName)
+                        p.Phone.ToLower().Contains(lowerSearch)) // Case-insensitive for phone
+            .OrderByDescending(p => p.CreatedAt)
             .ToListAsync(cancellationToken);
     }
 }
