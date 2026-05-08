@@ -22,7 +22,9 @@ public class MappingProfile : Profile
         CreateMap<CreateAppointmentDto, Appointment>();
         CreateMap<UpdateAppointmentDto, Appointment>();
         
-        // Future steps will add more mappings here
-        // CreateMap<Consultation, ConsultationDto>().ReverseMap();
+        // Step 9: Consultation Creation mappings
+        CreateMap<Consultation, ConsultationDto>().ReverseMap();
+        CreateMap<CreateConsultationDto, Consultation>();
+        CreateMap<UpdateConsultationDto, Consultation>();
     }
 }
