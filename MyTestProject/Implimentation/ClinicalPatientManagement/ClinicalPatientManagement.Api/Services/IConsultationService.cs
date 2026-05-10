@@ -67,4 +67,20 @@ public interface IConsultationService
         CreateConsultationDto consultationDto,
         CreatePrescriptionDto? prescriptionDto = null,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Get patient consultation history with optional date filtering
+    /// Step 12: Implement Patient History - View past visits with date filtering
+    /// </summary>
+    /// <param name="patientId">Patient ID</param>
+    /// <param name="startDate">Start date for filtering (inclusive), null for no lower bound</param>
+    /// <param name="endDate">End date for filtering (inclusive), null for no upper bound</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Filtered consultations ordered by creation date descending</returns>
+    /// <exception cref="ArgumentException">Thrown when startDate > endDate</exception>
+    Task<IEnumerable<ConsultationDto>> GetPatientHistoryAsync(
+        int patientId,
+        DateTime? startDate = null,
+        DateTime? endDate = null,
+        CancellationToken cancellationToken = default);
 }
