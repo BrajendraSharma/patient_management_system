@@ -66,7 +66,7 @@ public class ExportServiceTests
         // Assert
         Assert.NotNull(result);
         Assert.Equal("Completed", result.Status);
-        Assert.Equal("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", result.MimeType);
+        Assert.Equal("text/csv", result.MimeType);
         Assert.Contains("PatientData_", result.FileName);
         Assert.Equal(1, result.RecordCount);
     }
@@ -396,7 +396,7 @@ public class ExportServiceTests
         // Assert
         Assert.NotNull(result);
         Assert.Contains("PatientData_", result.FileName);
-        Assert.EndsWith(".pdf", result.FileName);
-        Assert.Equal("application/pdf", result.MimeType);
+        Assert.EndsWith(".txt", result.FileName);
+        Assert.Equal("text/plain", result.MimeType);
     }
 }

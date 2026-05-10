@@ -107,7 +107,10 @@ public class ExportService : IExportService
             };
 
             string mimeType = GetMimeType(request.Format);
-            string fileExtension = request.Format?.ToLower() == "pdf" ? ".pdf" : ".xlsx";
+            // Note: Using CSV for Excel (plain text CSV, not binary .xlsx)
+            // and plain text for PDF (not binary PDF). To support true Excel/PDF,
+            // consider adding EPPlus or iTextSharp libraries.
+            string fileExtension = request.Format?.ToLower() == "pdf" ? ".txt" : ".csv";
 
             _logger.Information("Export completed: FileName={FileName}, RecordCount={RecordCount}", 
                 fileName, dataToExport.Count);
@@ -392,14 +395,17 @@ public class ExportService : IExportService
 
     /// <summary>
     /// Get MIME type based on format
+    /// Note: Using text/csv for Excel (since we generate CSV, not binary Excel)
+    /// and text/plain for PDF (since we generate plain text, not binary PDF)
+    /// For true Excel/PDF support, add EPPlus or iTextSharp libraries
     /// </summary>
     private string GetMimeType(string format)
     {
         return format?.ToLower() switch
         {
-            "excel" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            "pdf" => "application/pdf",
-            _ => "application/octet-stream"
+            "excel" => "text/csv", // Excel format generates CSV text
+            "pdf" => "text/plain", // PDF format generates plain text
+            _ => "text/plain"
         };
     }
 
