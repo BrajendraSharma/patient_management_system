@@ -1,5 +1,6 @@
 using ClinicalPatientManagement.Client.Models;
 using System.Net.Http.Json;
+using System.Text.Json;
 
 namespace ClinicalPatientManagement.Client.Services;
 
@@ -60,7 +61,8 @@ public class ConsultationApiClient : IConsultationApiClient
         {
             var response = await _httpClient.PostAsJsonAsync(_baseUri, createModel);
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsAsync<ConsultationModel>() 
+            var json = await response.Content.ReadAsStringAsync();
+            return JsonSerializer.Deserialize<ConsultationModel>(json)
                 ?? throw new InvalidOperationException("Failed to create consultation");
         }
         catch (Exception ex)
@@ -79,7 +81,8 @@ public class ConsultationApiClient : IConsultationApiClient
         {
             var response = await _httpClient.PutAsJsonAsync($"{_baseUri}/{id}", updateModel);
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsAsync<ConsultationModel>() 
+            var json = await response.Content.ReadAsStringAsync();
+            return JsonSerializer.Deserialize<ConsultationModel>(json)
                 ?? throw new InvalidOperationException("Failed to update consultation");
         }
         catch (Exception ex)

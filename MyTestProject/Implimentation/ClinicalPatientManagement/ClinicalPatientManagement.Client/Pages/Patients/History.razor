@@ -176,9 +176,9 @@
     [Parameter]
     public int PatientId { get; set; }
 
-    private PatientDto? patient;
-    private List<ConsultationDto>? consultations;
-    private List<ConsultationDto>? allConsultations;
+    private PatientModel? patient;
+    private List<ConsultationModel>? consultations;
+    private List<ConsultationModel>? allConsultations;
     private bool isLoading = true;
     private bool filterApplied = false;
     private string? errorMessage;
@@ -191,7 +191,7 @@
         try
         {
             // Load patient details
-            patient = await PatientApiClient.GetPatientByIdAsync(PatientId);
+            patient = await PatientApiClient.GetByIdAsync(PatientId);
 
             if (patient == null)
             {
@@ -223,7 +223,7 @@
         catch (Exception ex)
         {
             errorMessage = $"Error loading consultation history: {ex.Message}";
-            consultations = new List<ConsultationDto>();
+            consultations = new List<ConsultationModel>();
         }
         finally
         {
@@ -253,7 +253,7 @@
         catch (Exception ex)
         {
             errorMessage = $"Error applying filter: {ex.Message}";
-            consultations = new List<ConsultationDto>();
+            consultations = new List<ConsultationModel>();
         }
         finally
         {
