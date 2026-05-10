@@ -1,0 +1,245 @@
+@page "/export"
+@using System.Globalization
+@using ClinicalPatientManagement.Client.Services
+@inject IExportApiClient ExportApiClient
+@inject HttpClient HttpClient
+
+<PageTitle>Data Export</PageTitle>
+
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2>Data Export</h2>
+            <p class="text-muted">Export patient, visit history, and prescription data to Excel or PDF format</p>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="alert alert-info">Loading export options...</div>
+    }
+    else
+    {
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">Export Options</h5>
+            </div>
+            <div class="card-body">
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <strong>Error:</strong> @errorMessage
+                        <button type="button" class="btn-close" @onclick="() => errorMessage = null"></button>
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(successMessage))
+                {
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <strong>Success:</strong> @successMessage
+                        <button type="button" class="btn-close" @onclick="() => successMessage = null"></button>
+                    </div>
+                }
+
+                <form @onsubmit="HandleExport" @onsubmit:preventDefault="true">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Export Format <span class="text-danger">*</span></label>
+                            <select class="form-select" @bind="selectedFormat" required>
+                                <option value="">Select format...</option>
+                                <option value="Excel">Excel (.xlsx)</option>
+                                <option value="PDF">PDF</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Data Type <span class="text-danger">*</span></label>
+                            <select class="form-select" @bind="selectedDataType" required>
+                                <option value="">Select data type...</option>
+                                <option value="PatientData">Patient Data</option>
+                                <option value="VisitHistory">Visit History</option>
+                                <option value="PrescriptionData">Prescription Data</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    @if (selectedDataType == "VisitHistory")
+                    {
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Patient <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" @bind="selectedPatientId" placeholder="Patient ID" required />
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Start Date</label>
+                                <input type="date" class="form-control" @bind="startDate" />
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">End Date</label>
+                                <input type="date" class="form-control" @bind="endDate" />
+                            </div>
+                        </div>
+                    }
+                    else if (selectedDataType == "PrescriptionData")
+                    {
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Patient (Optional)</label>
+                                <input type="number" class="form-control" @bind="selectedPatientId" placeholder="Leave blank for all" />
+                            </div>
+                        </div>
+                    }
+
+                    <div class="row">
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary" disabled="@isExporting">
+                                @if (isExporting)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    <span>Exporting...</span>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-download"></i>
+                                    <span>Export Data</span>
+                                }
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">Export Instructions</h5>
+            </div>
+            <div class="card-body">
+                <h6>Available Export Types:</h6>
+                <ul>
+                    <li><strong>Patient Data:</strong> Export all patient information (name, phone, email, age, gender, date of birth)</li>
+                    <li><strong>Visit History:</strong> Export consultation records with vitals, complaints, diagnosis, and medications for a specific patient with optional date filtering</li>
+                    <li><strong>Prescription Data:</strong> Export all prescriptions with medication details, optionally filtered by patient</li>
+                </ul>
+
+                <h6 class="mt-3">Date Format:</h6>
+                <p>All dates in exported files are formatted as <strong>DD-MM-YYYY</strong> for consistency.</p>
+
+                <h6 class="mt-3">File Formats:</h6>
+                <ul>
+                    <li><strong>Excel:</strong> CSV format compatible with Microsoft Excel and Google Sheets</li>
+                    <li><strong>PDF:</strong> Formatted text document suitable for printing and archival</li>
+                </ul>
+
+                <h6 class="mt-3">Notes:</h6>
+                <ul>
+                    <li>Exported files are generated immediately upon request</li>
+                    <li>Large exports may take a few seconds to process</li>
+                    <li>All exported data is read-only from the export file</li>
+                    <li>Use date filters to export specific time periods of visit history</li>
+                </ul>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private string selectedFormat = string.Empty;
+    private string selectedDataType = string.Empty;
+    private int? selectedPatientId;
+    private DateTime? startDate;
+    private DateTime? endDate;
+    private string errorMessage = string.Empty;
+    private string successMessage = string.Empty;
+    private bool isLoading = true;
+    private bool isExporting = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            isLoading = true;
+            // Load available formats and data types
+            await Task.Delay(100); // Simulate loading
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading export options: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleExport()
+    {
+        if (isExporting)
+            return;
+
+        try
+        {
+            errorMessage = string.Empty;
+            successMessage = string.Empty;
+            isExporting = true;
+
+            // Validate inputs
+            if (string.IsNullOrEmpty(selectedFormat))
+            {
+                errorMessage = "Please select an export format.";
+                return;
+            }
+
+            if (string.IsNullOrEmpty(selectedDataType))
+            {
+                errorMessage = "Please select a data type to export.";
+                return;
+            }
+
+            if (selectedDataType == "VisitHistory" && !selectedPatientId.HasValue)
+            {
+                errorMessage = "Patient ID is required for Visit History export.";
+                return;
+            }
+
+            // Perform export
+            var fileBytes = await ExportApiClient.ExportDataAsync(
+                selectedFormat,
+                selectedDataType,
+                selectedPatientId,
+                startDate,
+                endDate);
+
+            if (fileBytes == null || fileBytes.Length == 0)
+            {
+                errorMessage = "No data found for export.";
+                return;
+            }
+
+            // Trigger download
+            string fileName = $"{selectedDataType}_{DateTime.Now:yyyyMMdd_HHmmss}";
+            string extension = selectedFormat == "PDF" ? ".pdf" : ".xlsx";
+            string mimeType = selectedFormat == "PDF" ? "application/pdf" : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+            await DownloadFile(fileBytes, fileName + extension, mimeType);
+            successMessage = $"{selectedDataType} exported successfully!";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error exporting data: {ex.Message}";
+        }
+        finally
+        {
+            isExporting = false;
+        }
+    }
+
+    private async Task DownloadFile(byte[] fileBytes, string fileName, string mimeType)
+    {
+        // Use JavaScript interop to trigger the browser download
+        await HttpClient.PostAsJsonAsync("/api/export/download", new { 
+            fileName, 
+            mimeType, 
+            fileContent = Convert.ToBase64String(fileBytes)
+        });
+    }
+}

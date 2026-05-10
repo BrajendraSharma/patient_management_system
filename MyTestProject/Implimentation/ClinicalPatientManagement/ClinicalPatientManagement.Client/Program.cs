@@ -40,6 +40,9 @@ builder.Services.AddScoped<IAppointmentApiClient, AppointmentApiClient>();
 // Step 9-12: Register Consultation API Client
 builder.Services.AddScoped<IConsultationApiClient, ConsultationApiClient>();
 
+// Step 13: Register Export API Client
+builder.Services.AddScoped<IExportApiClient, ExportApiClient>();
+
 var host = builder.Build();
 
 // Initialize localStorage helper with JSRuntime
