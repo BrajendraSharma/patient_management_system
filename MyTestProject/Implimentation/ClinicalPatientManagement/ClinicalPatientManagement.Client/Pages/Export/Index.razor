@@ -1,8 +1,9 @@
 @page "/export"
 @using System.Globalization
 @using ClinicalPatientManagement.Client.Services
+@using Microsoft.JSInterop
 @inject IExportApiClient ExportApiClient
-@inject HttpClient HttpClient
+@inject IJSRuntime JSRuntime
 
 <PageTitle>Data Export</PageTitle>
 
@@ -236,10 +237,7 @@
     private async Task DownloadFile(byte[] fileBytes, string fileName, string mimeType)
     {
         // Use JavaScript interop to trigger the browser download
-        await HttpClient.PostAsJsonAsync("/api/export/download", new { 
-            fileName, 
-            mimeType, 
-            fileContent = Convert.ToBase64String(fileBytes)
-        });
+        var base64String = Convert.ToBase64String(fileBytes);
+        await JSRuntime.InvokeVoidAsync("downloadFile", base64String, fileName, mimeType);
     }
 }
