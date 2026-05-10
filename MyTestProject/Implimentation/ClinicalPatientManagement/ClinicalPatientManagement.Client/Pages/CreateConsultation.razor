@@ -1,0 +1,420 @@
+@page "/create-consultation/{AppointmentId:int}"
+@using System.Text.Json
+@using ClinicalPatientManagement.Client.Models
+@using ClinicalPatientManagement.Client.Services
+@inject HttpClient Http
+@inject IPatientApiClient PatientApiClient
+@inject NavigationManager Navigation
+
+<PageTitle>Create Consultation</PageTitle>
+
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2>Create Consultation</h2>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="alert alert-info">Loading appointment details...</div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger">
+            <strong>Error:</strong> @errorMessage
+            <button class="btn btn-secondary btn-sm ms-2" @onclick="GoBack">Back</button>
+        </div>
+    }
+    else if (appointment == null)
+    {
+        <div class="alert alert-warning">Appointment not found.</div>
+        <button class="btn btn-secondary" @onclick="GoBack">Back</button>
+    }
+    else
+    {
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">Appointment Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Patient:</strong> @patient?.FullName</p>
+                        <p><strong>Age:</strong> @patient?.Age years</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Appointment Date:</strong> @appointment.AppointmentDate.ToString("dd-MM-yyyy")</p>
+                        <p><strong>Status:</strong> <span class="badge bg-info">@appointment.Status</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">Consultation Information</h5>
+            </div>
+            <div class="card-body">
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        @errorMessage
+                        <button type="button" class="btn-close" @onclick="() => errorMessage = null"></button>
+                    </div>
+                }
+
+                <form @onsubmit="HandleSubmit" @onsubmit:preventDefault="true">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Temperature (°C) <span class="text-danger">*</span></label>
+                            <input type="number" step="0.1" class="form-control" 
+                                @bind="consultation.Temperature" 
+                                @bind:event="oninput" required />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Blood Pressure <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" 
+                                @bind="consultation.BloodPressure" 
+                                @bind:event="oninput" 
+                                placeholder="e.g., 120/80" required />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Pulse (bpm) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" 
+                                @bind="consultation.Pulse" 
+                                @bind:event="oninput" required />
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Complaints <span class="text-danger">*</span></label>
+                        <textarea class="form-control" rows="3" 
+                            @bind="consultation.Complaints" 
+                            @bind:event="oninput" required></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Diagnosis <span class="text-danger">*</span></label>
+                        <textarea class="form-control" rows="3" 
+                            @bind="consultation.Diagnosis" 
+                            @bind:event="oninput" required></textarea>
+                    </div>
+
+                    <div class="card mt-4 mb-3">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">Medications <span class="text-danger">*</span></h6>
+                        </div>
+                        <div class="card-body">
+                            @for (int i = 0; i < medications.Count; i++)
+                            {
+                                int index = i; // Capture index for closure
+                                var med = medications[index];
+                                <div class="card mb-3 border-secondary">
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-6 mb-2">
+                                                <label class="form-label">Medication Name</label>
+                                                <input type="text" class="form-control" 
+                                                    value="@med.Name" 
+                                                    @onchange="@((ChangeEventArgs e) => UpdateMedication(index, nameof(med.Name), e.Value?.ToString() ?? string.Empty))" />
+                                            </div>
+                                            <div class="col-md-6 mb-2">
+                                                <label class="form-label">Dosage</label>
+                                                <input type="text" class="form-control" 
+                                                    value="@med.Dosage" 
+                                                    @onchange="@((ChangeEventArgs e) => UpdateMedication(index, nameof(med.Dosage), e.Value?.ToString() ?? string.Empty))" 
+                                                    placeholder="e.g., 500mg" />
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-4 mb-2">
+                                                <label class="form-label">Frequency</label>
+                                                <input type="text" class="form-control" 
+                                                    value="@med.Frequency" 
+                                                    @onchange="@((ChangeEventArgs e) => UpdateMedication(index, nameof(med.Frequency), e.Value?.ToString() ?? string.Empty))" 
+                                                    placeholder="e.g., Twice daily" />
+                                            </div>
+                                            <div class="col-md-4 mb-2">
+                                                <label class="form-label">Duration (days)</label>
+                                                <input type="number" class="form-control" 
+                                                    value="@med.Duration" 
+                                                    @onchange="@((ChangeEventArgs e) => UpdateMedicationDuration(index, e.Value))" />
+                                            </div>
+                                            <div class="col-md-4 mb-2">
+                                                <label class="form-label">Instructions</label>
+                                                <input type="text" class="form-control" 
+                                                    value="@med.Instructions" 
+                                                    @onchange="@((ChangeEventArgs e) => UpdateMedication(index, nameof(med.Instructions), e.Value?.ToString() ?? string.Empty))" 
+                                                    placeholder="e.g., After meals" />
+                                            </div>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-danger" @onclick="() => RemoveMedication(index)">
+                                            <i class="bi bi-trash"></i> Remove
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+
+                            <button type="button" class="btn btn-sm btn-success" @onclick="AddMedication">
+                                <i class="bi bi-plus-circle"></i> Add Medication
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                            @if (isSubmitting)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2"></span>
+                                <span>Saving...</span>
+                            }
+                            else
+                            {
+                                <span><i class="bi bi-check-circle"></i> Save Consultation</span>
+                            }
+                        </button>
+                        <button type="button" class="btn btn-secondary" @onclick="GoBack" disabled="@isSubmitting">
+                            <i class="bi bi-arrow-left"></i> Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int AppointmentId { get; set; }
+
+    private AppointmentModel? appointment;
+    private PatientModel? patient;
+    private ConsultationCreateModel consultation = new();
+    private List<MedicationCreateModel> medications = new();
+    
+    private string? errorMessage;
+    private bool isLoading = true;
+    private bool isSubmitting = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAppointment();
+        medications.Add(new MedicationCreateModel());
+    }
+
+    private async Task LoadAppointment()
+    {
+        try
+        {
+            isLoading = true;
+            appointment = await Http.GetFromJsonAsync<AppointmentModel>($"/api/appointments/{AppointmentId}");
+            
+            if (appointment == null)
+            {
+                errorMessage = "Appointment not found.";
+            }
+            else
+            {
+                consultation.AppointmentId = AppointmentId;
+                
+                // Load patient details
+                patient = await PatientApiClient.GetByIdAsync(appointment.PatientId);
+                if (patient == null)
+                {
+                    errorMessage = "Patient not found.";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading appointment: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (isSubmitting || appointment == null)
+            return;
+
+        try
+        {
+            errorMessage = null;
+            isSubmitting = true;
+
+            // Validate required fields
+            if (string.IsNullOrWhiteSpace(consultation.Complaints))
+            {
+                errorMessage = "Complaints are required.";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(consultation.Diagnosis))
+            {
+                errorMessage = "Diagnosis is required.";
+                return;
+            }
+
+            if (consultation.Temperature <= 0)
+            {
+                errorMessage = "Please enter a valid temperature.";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(consultation.BloodPressure))
+            {
+                errorMessage = "Blood pressure is required.";
+                return;
+            }
+
+            if (consultation.Pulse <= 0)
+            {
+                errorMessage = "Please enter a valid pulse rate.";
+                return;
+            }
+
+            // Prepare consultation with non-empty medications
+            var medicationsToSave = medications.Where(m => !string.IsNullOrWhiteSpace(m.Name)).ToList();
+            
+            if (medicationsToSave.Count == 0)
+            {
+                errorMessage = "Please add at least one medication.";
+                return;
+            }
+
+            // Create the consultation with medications
+            var consultationPayload = new
+            {
+                consultation.AppointmentId,
+                consultation.Temperature,
+                consultation.BloodPressure,
+                consultation.Pulse,
+                consultation.Complaints,
+                consultation.Diagnosis,
+                Medications = medicationsToSave
+            };
+
+            var response = await Http.PostAsJsonAsync("/api/consultations", consultationPayload);
+
+            if (response.IsSuccessStatusCode)
+            {
+                // Parse the response to get the prescription ID
+                var content = await response.Content.ReadAsStringAsync();
+                var result = JsonSerializer.Deserialize<JsonElement>(content, 
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                
+                if (result.ValueKind != JsonValueKind.Undefined && result.TryGetProperty("prescriptionId", out var prescriptionIdElement))
+                {
+                    var prescriptionId = prescriptionIdElement.GetInt32();
+                    Navigation.NavigateTo($"/prescription/{prescriptionId}");
+                }
+                else if (result.ValueKind != JsonValueKind.Undefined && result.TryGetProperty("id", out var idElement))
+                {
+                    // Alternative property name for the ID
+                    var consultationId = idElement.GetInt32();
+                    errorMessage = "Consultation saved successfully!";
+                    await Task.Delay(1000);
+                    Navigation.NavigateTo("/appointments");
+                }
+                else
+                {
+                    errorMessage = "Consultation saved but could not retrieve confirmation.";
+                }
+            }
+            else
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                errorMessage = $"Error saving consultation: {response.StatusCode} - {content}";
+                Console.WriteLine($"API Error: {errorMessage}");
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}";
+            Console.WriteLine($"Exception: {ex}");
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private void AddMedication()
+    {
+        medications.Add(new MedicationCreateModel());
+    }
+
+    private void UpdateMedication(int index, string propertyName, string value)
+    {
+        if (index >= 0 && index < medications.Count)
+        {
+            var medication = medications[index];
+            switch (propertyName)
+            {
+                case nameof(MedicationCreateModel.Name):
+                    medication.Name = value;
+                    break;
+                case nameof(MedicationCreateModel.Dosage):
+                    medication.Dosage = value;
+                    break;
+                case nameof(MedicationCreateModel.Frequency):
+                    medication.Frequency = value;
+                    break;
+                case nameof(MedicationCreateModel.Instructions):
+                    medication.Instructions = value;
+                    break;
+            }
+            // Force Blazor to recognize the change
+            medications[index] = medication;
+            StateHasChanged();
+        }
+    }
+
+    private void UpdateMedicationDuration(int index, object? value)
+    {
+        if (index >= 0 && index < medications.Count && value != null)
+        {
+            if (int.TryParse(value.ToString(), out int duration))
+            {
+                medications[index].Duration = duration;
+                StateHasChanged();
+            }
+        }
+    }
+
+    private void RemoveMedication(int index)
+    {
+        if (medications.Count > 1)
+        {
+            medications.RemoveAt(index);
+        }
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/appointments");
+    }
+
+    private class ConsultationCreateModel
+    {
+        public int AppointmentId { get; set; }
+        public decimal Temperature { get; set; }
+        public string BloodPressure { get; set; } = string.Empty;
+        public int Pulse { get; set; }
+        public string Complaints { get; set; } = string.Empty;
+        public string Diagnosis { get; set; } = string.Empty;
+    }
+
+    private class MedicationCreateModel
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Dosage { get; set; } = string.Empty;
+        public string Frequency { get; set; } = string.Empty;
+        public int Duration { get; set; }
+        public string Instructions { get; set; } = string.Empty;
+    }
+}

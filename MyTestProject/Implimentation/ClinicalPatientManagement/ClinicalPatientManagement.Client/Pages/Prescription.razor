@@ -1,8 +1,10 @@
 @page "/prescription/{PrescriptionId:int}"
 @using System.Globalization
 @using ClinicalPatientManagement.Client.Models
+@using Microsoft.JSInterop
 @inject HttpClient Http
 @inject NavigationManager Navigation
+@inject IJSRuntime JS
 
 <PageTitle>Prescription - View & Print</PageTitle>
 
@@ -215,9 +217,9 @@
         }
     }
 
-    private void PrintPrescription()
+    private async Task PrintPrescription()
     {
-        // Browser print functionality
+        await JS.InvokeVoidAsync("window.print");
     }
 
     private void GoBack()

@@ -74,7 +74,7 @@ public class ConsultationService : IConsultationService
     }
 
     /// <summary>
-    /// Create new consultation with validation
+    /// Create new consultation with validation and prescription (if medications provided)
     /// </summary>
     public async Task<ConsultationDto> CreateAsync(CreateConsultationDto createDto, CancellationToken cancellationToken = default)
     {
@@ -112,6 +112,21 @@ public class ConsultationService : IConsultationService
 
             _logger.Information("Consultation created successfully with ID {ConsultationId} for appointment {AppointmentId}", 
                 createdConsultation.Id, createdConsultation.AppointmentId);
+
+            // Create prescription with medications if provided
+            if (createDto.Medications != null && createDto.Medications.Count > 0)
+            {
+                var createPrescriptionDto = new CreatePrescriptionDto
+                {
+                    ConsultationId = createdConsultation.Id,
+                    Medications = createDto.Medications
+                };
+
+                await _prescriptionService.CreateAsync(createPrescriptionDto);
+                _logger.Information("Prescription created with {MedicationCount} medications for consultation {ConsultationId}", 
+                    createDto.Medications.Count, createdConsultation.Id);
+            }
+
             return _mapper.Map<ConsultationDto>(createdConsultation);
         }
         catch (Exception ex)
@@ -476,6 +491,23 @@ public class ConsultationService : IConsultationService
         catch (Exception ex)
         {
             _logger.Error(ex, "Error fetching consultation history for patient {PatientId}", patientId);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Get prescription by consultation ID
+    /// </summary>
+    public async Task<PrescriptionDto?> GetPrescriptionByConsultationIdAsync(int consultationId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            _logger.Information("Fetching prescription for consultation {ConsultationId}", consultationId);
+            return await _prescriptionService.GetByConsultationIdAsync(consultationId);
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "Error fetching prescription for consultation {ConsultationId}", consultationId);
             throw;
         }
     }

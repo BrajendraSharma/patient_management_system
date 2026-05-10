@@ -1,10 +1,14 @@
 @page "/history/{patientId:int}"
 @using ClinicalPatientManagement.Client.Models
 @using ClinicalPatientManagement.Client.Services
+@using System.Text.Json
 @attribute [Authorize]
 @inject IPatientApiClient PatientApiClient
 @inject IConsultationApiClient ConsultationApiClient
+@inject HttpClient Http
 @inject NavigationManager Navigation
+
+<PageTitle>Patient History</PageTitle>
 
 <div class="container-fluid mt-5">
     <div class="row">
@@ -27,8 +31,8 @@
             @if (!string.IsNullOrEmpty(errorMessage))
             {
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <i class="bi bi-exclamation-circle"></i> @errorMessage
-                    <button type="button" class="btn-close" @onclick="() => errorMessage = string.Empty"></button>
+                    <i class="bi bi-exclamation-circle"></i> <strong>Error:</strong> @errorMessage
+                    <button type="button" class="btn-close" @onclick="() => errorMessage = null"></button>
                 </div>
             }
 
@@ -50,12 +54,12 @@
                             <input type="date" class="form-control" @bind="filterEndDate" />
                         </div>
                         <div class="col-md-3">
-                            <button class="btn btn-primary w-100" @onclick="ApplyFilter">
+                            <button class="btn btn-primary w-100" @onclick="ApplyFilter" disabled="@isLoading">
                                 <i class="bi bi-search"></i> Apply Filter
                             </button>
                         </div>
                         <div class="col-md-3">
-                            <button class="btn btn-outline-secondary w-100" @onclick="ClearFilter">
+                            <button class="btn btn-outline-secondary w-100" @onclick="ClearFilter" disabled="@isLoading">
                                 <i class="bi bi-arrow-clockwise"></i> Clear Filter
                             </button>
                         </div>
@@ -66,85 +70,93 @@
             <!-- Loading State -->
             @if (isLoading)
             {
-                <div class="text-center">
-                    <div class="spinner-border" role="status">
+                <div class="alert alert-info">
+                    <div class="spinner-border spinner-border-sm me-2" role="status">
                         <span class="visually-hidden">Loading...</span>
                     </div>
-                    <p class="mt-2">Loading consultation history...</p>
+                    <span>Loading consultation history...</span>
                 </div>
             }
-            <!-- No Consultations -->
-            else if (consultations == null || !consultations.Any())
+            else if (patient == null)
+            {
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i> Patient information could not be loaded.
+                </div>
+            }
+            else if (consultations == null || consultations.Count == 0)
             {
                 <div class="alert alert-info">
                     <i class="bi bi-info-circle"></i>
-                    No consultation records found
+                    <strong>No consultation records found</strong>
                     @if (filterApplied)
                     {
                         <span>for the selected date range.</span>
                     }
+                    else
+                    {
+                        <span>for this patient yet.</span>
+                    }
                 </div>
             }
-            <!-- Consultations List -->
             else
             {
                 <div>
-                    <p class="text-muted">
-                        <strong>@consultations.Count()</strong> consultation(s) found
-                        @if (filterApplied && filterStartDate.HasValue || filterEndDate.HasValue)
+                    <p class="text-muted mb-3">
+                        <strong>@consultations.Count consultation(s)</strong> found
+                        @if (filterApplied && (filterStartDate.HasValue || filterEndDate.HasValue))
                         {
-                            <span>(filtered)</span>
+                            <span class="badge bg-info">(filtered)</span>
                         }
                     </p>
 
                     @foreach (var consultation in consultations)
                     {
-                        <div class="card mb-3 border-left border-primary">
+                        <div class="card mb-3">
                             <div class="card-header bg-light">
-                                <div class="row">
+                                <div class="row align-items-center">
                                     <div class="col-md-8">
                                         <h5 class="mb-0">
                                             <i class="bi bi-calendar-event"></i>
                                             @consultation.CreatedAt.ToString("dddd, MMMM d, yyyy")
                                         </h5>
                                         <small class="text-muted">
-                                            @consultation.CreatedAt.ToString("h:mm tt")
+                                            Time: @consultation.CreatedAt.ToString("h:mm tt")
                                         </small>
                                     </div>
                                     <div class="col-md-4 text-end">
                                         <span class="badge bg-primary">
-                                            Consultation ID: @consultation.Id
+                                            ID: @consultation.Id
                                         </span>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="card-body">
-                                <!-- Vitals -->
+                                <!-- Vitals Section -->
                                 <div class="row mb-3">
                                     <div class="col-md-6">
-                                        <h6 class="card-subtitle mb-3">
+                                        <h6 class="mb-3">
                                             <i class="bi bi-heart-pulse"></i> Vitals
                                         </h6>
                                         <div class="row">
-                                            <div class="col-6">
+                                            <div class="col-sm-6 mb-2">
                                                 <small class="text-muted d-block">Temperature</small>
                                                 <strong>@consultation.Temperature.ToString("F1")°C</strong>
                                             </div>
-                                            <div class="col-6">
+                                            <div class="col-sm-6 mb-2">
                                                 <small class="text-muted d-block">Blood Pressure</small>
                                                 <strong>@consultation.BloodPressure</strong>
                                             </div>
-                                            <div class="col-6 mt-2">
+                                            <div class="col-sm-6">
                                                 <small class="text-muted d-block">Pulse</small>
                                                 <strong>@consultation.Pulse bpm</strong>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <!-- Complaints & Diagnosis -->
+                                    <!-- Clinical Notes -->
                                     <div class="col-md-6">
-                                        <h6 class="card-subtitle mb-3">
+                                        <h6 class="mb-3">
                                             <i class="bi bi-file-medical"></i> Clinical Notes
                                         </h6>
                                         <div class="mb-2">
@@ -153,16 +165,65 @@
                                         </div>
                                         <div>
                                             <small class="text-muted d-block">Diagnosis</small>
-                                            <p>@consultation.Diagnosis</p>
+                                            <p class="mb-0">@consultation.Diagnosis</p>
                                         </div>
                                     </div>
                                 </div>
+
+                                <!-- Medications Section -->
+                                @if (consultation.Medications != null && consultation.Medications.Count > 0)
+                                {
+                                    <div class="mt-4 pt-3 border-top">
+                                        <h6 class="mb-3">
+                                            <i class="bi bi-capsule"></i> Medications
+                                        </h6>
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-striped mb-0">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>Medication</th>
+                                                        <th>Dosage</th>
+                                                        <th>Frequency</th>
+                                                        <th>Days</th>
+                                                        <th>Instructions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach (var med in consultation.Medications)
+                                                    {
+                                                        <tr>
+                                                            <td><strong>@med.Name</strong></td>
+                                                            <td>@med.Dosage</td>
+                                                            <td>@med.Frequency</td>
+                                                            <td><span class="badge bg-info">@med.Duration</span></td>
+                                                            <td>
+                                                                @if (!string.IsNullOrEmpty(med.Instructions))
+                                                                {
+                                                                    <small>@med.Instructions</small>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <small class="text-muted">—</small>
+                                                                }
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                }
                             </div>
 
-                            <div class="card-footer bg-light text-end">
-                                <small class="text-muted">
-                                    Last updated: @consultation.UpdatedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? "N/A"
-                                </small>
+                            <div class="card-footer bg-light text-muted small">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        Created: @consultation.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")
+                                    </div>
+                                    <div class="col-md-6 text-end">
+                                        Updated: @(consultation.UpdatedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? "Never")
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     }
@@ -178,11 +239,9 @@
 
     private PatientModel? patient;
     private List<ConsultationModel>? consultations;
-    private List<ConsultationModel>? allConsultations;
     private bool isLoading = true;
     private bool filterApplied = false;
     private string? errorMessage;
-
     private DateTime? filterStartDate;
     private DateTime? filterEndDate;
 
@@ -190,81 +249,130 @@
     {
         try
         {
+            isLoading = true;
+            errorMessage = null;
+            
             // Load patient details
             patient = await PatientApiClient.GetByIdAsync(PatientId);
-
             if (patient == null)
             {
                 errorMessage = "Patient not found.";
-                isLoading = false;
                 return;
             }
 
-            // Load consultation history
-            await LoadHistory();
+            // Load initial consultation history
+            await LoadConsultations(null, null);
         }
         catch (Exception ex)
         {
             errorMessage = $"Error loading patient history: {ex.Message}";
-            isLoading = false;
-        }
-    }
-
-    private async Task LoadHistory()
-    {
-        try
-        {
-            isLoading = true;
-            allConsultations = (await ConsultationApiClient.GetPatientHistoryAsync(PatientId, null, null))?.ToList();
-            consultations = allConsultations;
-            filterApplied = false;
-            errorMessage = null;
-        }
-        catch (Exception ex)
-        {
-            errorMessage = $"Error loading consultation history: {ex.Message}";
-            consultations = new List<ConsultationModel>();
+            Console.WriteLine($"Exception in OnInitializedAsync: {ex}");
         }
         finally
         {
             isLoading = false;
+        }
+    }
+
+    private async Task LoadConsultations(DateTime? startDate, DateTime? endDate)
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+
+            var history = await ConsultationApiClient.GetPatientHistoryAsync(PatientId, startDate, endDate);
+            consultations = history?.ToList() ?? new List<ConsultationModel>();
+
+            // Load prescriptions for all consultations
+            if (consultations.Count > 0)
+            {
+                await LoadPrescriptionsForConsultations(consultations);
+            }
+
+            filterApplied = (startDate.HasValue || endDate.HasValue);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading consultations: {ex.Message}";
+            consultations = new List<ConsultationModel>();
+            Console.WriteLine($"Exception in LoadConsultations: {ex}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadPrescriptionsForConsultations(List<ConsultationModel> consultationsList)
+    {
+        try
+        {
+            foreach (var consultation in consultationsList)
+            {
+                try
+                {
+                    var response = await Http.GetAsync($"/api/prescriptions/consultation/{consultation.Id}");
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var content = await response.Content.ReadAsStringAsync();
+                        var prescription = JsonSerializer.Deserialize<PrescriptionModel>(content,
+                            new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                        if (prescription?.Medications != null && prescription.Medications.Count > 0)
+                        {
+                            consultation.Medications = prescription.Medications
+                                .Select(m => new MedicationInfo
+                                {
+                                    Id = m.Id,
+                                    Name = m.Name,
+                                    Dosage = m.Dosage,
+                                    Frequency = m.Frequency,
+                                    Duration = m.Duration,
+                                    Instructions = m.Instructions
+                                })
+                                .ToList();
+                        }
+                        else
+                        {
+                            consultation.Medications = new List<MedicationInfo>();
+                        }
+                    }
+                    else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                    {
+                        // No prescription for this consultation (expected case)
+                        consultation.Medications = new List<MedicationInfo>();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error loading prescription for consultation {consultation.Id}: {ex.Message}");
+                    consultation.Medications = new List<MedicationInfo>();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in LoadPrescriptionsForConsultations: {ex.Message}");
         }
     }
 
     private async Task ApplyFilter()
     {
-        try
+        if (filterStartDate.HasValue && filterEndDate.HasValue && filterStartDate > filterEndDate)
         {
-            if (filterStartDate.HasValue && filterEndDate.HasValue && filterStartDate > filterEndDate)
-            {
-                errorMessage = "Start date cannot be after end date.";
-                return;
-            }
+            errorMessage = "Start date cannot be after end date.";
+            return;
+        }
 
-            isLoading = true;
-            consultations = (await ConsultationApiClient.GetPatientHistoryAsync(
-                PatientId,
-                filterStartDate,
-                filterEndDate))?.ToList();
-
-            filterApplied = filterStartDate.HasValue || filterEndDate.HasValue;
-            errorMessage = null;
-        }
-        catch (Exception ex)
-        {
-            errorMessage = $"Error applying filter: {ex.Message}";
-            consultations = new List<ConsultationModel>();
-        }
-        finally
-        {
-            isLoading = false;
-        }
+        await LoadConsultations(filterStartDate, filterEndDate);
     }
 
     private async Task ClearFilter()
     {
         filterStartDate = null;
         filterEndDate = null;
-        await LoadHistory();
+        await LoadConsultations(null, null);
     }
 }

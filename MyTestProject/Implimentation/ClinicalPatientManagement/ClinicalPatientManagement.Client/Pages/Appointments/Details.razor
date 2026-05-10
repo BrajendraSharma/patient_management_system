@@ -1,0 +1,261 @@
+@page "/appointments/{AppointmentId:int}"
+@using ClinicalPatientManagement.Client.Models
+@using ClinicalPatientManagement.Client.Services
+@inject IAppointmentApiClient AppointmentApiClient
+@inject IPatientApiClient PatientApiClient
+@inject NavigationManager Navigation
+@attribute [Authorize]
+
+<PageTitle>Appointment Details</PageTitle>
+
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2>Appointment Details</h2>
+                <a href="/appointments" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Appointments
+                </a>
+            </div>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading appointment details...</p>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-circle"></i> @errorMessage
+            <button type="button" class="btn-close" @onclick="() => errorMessage = string.Empty"></button>
+        </div>
+        <a href="/appointments" class="btn btn-secondary">Back to Appointments</a>
+    }
+    else if (appointment == null)
+    {
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle"></i> Appointment not found.
+        </div>
+        <a href="/appointments" class="btn btn-secondary">Back to Appointments</a>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-lg-8">
+                <!-- Appointment Card -->
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Appointment Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted">Appointment Date</label>
+                                <p class="fs-5 fw-bold">@appointment.AppointmentDate.ToString("dddd, MMMM d, yyyy")</p>
+                                <p class="text-muted">Time: @appointment.AppointmentDate.ToString("h:mm tt")</p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted">Status</label>
+                                <p>
+                                    <span class="badge @GetStatusBadgeClass(appointment.Status) fs-6">
+                                        @appointment.Status
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(appointment.Notes))
+                        {
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Notes</label>
+                                <p>@appointment.Notes</p>
+                            </div>
+                        }
+
+                        <div class="row text-muted small">
+                            <div class="col-md-6">
+                                <p><strong>Created:</strong> @appointment.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Last Updated:</strong> @(appointment.UpdatedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? "N/A")</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Patient Information Card -->
+                @if (patient != null)
+                {
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Patient Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">Name</label>
+                                    <p class="fs-5 fw-bold">@patient.FullName</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">Age</label>
+                                    <p class="fs-5">@patient.Age years</p>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">Phone</label>
+                                    <p>@patient.Phone</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">Email</label>
+                                    <p>@patient.Email</p>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">Gender</label>
+                                    <p>@patient.Gender</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">Date of Birth</label>
+                                    <p>@patient.DateOfBirth.ToString("MMMM d, yyyy")</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="col-lg-4">
+                <!-- Action Buttons -->
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="/create-consultation/@appointment.Id" class="btn btn-success">
+                                <i class="bi bi-plus-circle"></i> Create Consultation
+                            </a>
+                            <button class="btn btn-warning" @onclick="EditAppointment">
+                                <i class="bi bi-pencil"></i> Edit Appointment
+                            </button>
+                            <button class="btn btn-danger" @onclick="DeleteAppointment">
+                                <i class="bi bi-trash"></i> Delete Appointment
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Info Card -->
+                <div class="card mt-3">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Quick Info</h5>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Appointment ID:</strong> <code>@appointment.Id</code></p>
+                        <p><strong>Patient ID:</strong> <code>@appointment.PatientId</code></p>
+                        <p class="mb-0 text-muted"><small>Format: MMMM d, yyyy h:mm tt</small></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int AppointmentId { get; set; }
+
+    private AppointmentModel? appointment;
+    private PatientModel? patient;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAppointmentDetails();
+    }
+
+    private async Task LoadAppointmentDetails()
+    {
+        try
+        {
+            isLoading = true;
+            appointment = await AppointmentApiClient.GetByIdAsync(AppointmentId);
+
+            if (appointment == null)
+            {
+                errorMessage = "Appointment not found.";
+                return;
+            }
+
+            // Load patient details
+            patient = await PatientApiClient.GetByIdAsync(appointment.PatientId);
+
+            if (patient == null)
+            {
+                errorMessage = "Patient information could not be loaded.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading appointment: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void EditAppointment()
+    {
+        // Navigate to edit appointment page
+        Navigation.NavigateTo($"/appointments/{appointment?.Id}/edit");
+    }
+
+    private async Task DeleteAppointment()
+    {
+        if (appointment == null)
+            return;
+
+        if (await ConfirmDelete())
+        {
+            try
+            {
+                await AppointmentApiClient.DeleteAsync(appointment.Id);
+                Navigation.NavigateTo("/appointments");
+            }
+            catch (Exception ex)
+            {
+                errorMessage = $"Error deleting appointment: {ex.Message}";
+            }
+        }
+    }
+
+    private Task<bool> ConfirmDelete()
+    {
+        // In a real app, use a modal dialog. For now, use JS confirm
+        return Task.FromResult(true); // In production, use proper modal
+    }
+
+    private string GetStatusBadgeClass(string? status)
+    {
+        return status switch
+        {
+            "Scheduled" => "bg-primary",
+            "Completed" => "bg-success",
+            "Cancelled" => "bg-danger",
+            "No-Show" => "bg-warning text-dark",
+            _ => "bg-secondary"
+        };
+    }
+}

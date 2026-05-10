@@ -78,12 +78,13 @@ public class ConsultationsController : ControllerBase
     /// Create new consultation
     /// POST /api/consultations
     /// Step 9: Implement Consultation Creation
+    /// Returns consultation and prescription ID for client navigation
     /// </summary>
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<ConsultationDto>> Create(CreateConsultationDto createDto, CancellationToken cancellationToken)
+    public async Task<ActionResult<object>> Create(CreateConsultationDto createDto, CancellationToken cancellationToken)
     {
         try
         {
@@ -93,7 +94,25 @@ public class ConsultationsController : ControllerBase
             }
 
             var consultation = await _consultationService.CreateAsync(createDto, cancellationToken);
-            return CreatedAtAction(nameof(GetById), new { id = consultation.Id }, consultation);
+            
+            // Get prescription ID if it was created
+            int? prescriptionId = null;
+            if (createDto.Medications != null && createDto.Medications.Count > 0)
+            {
+                // Fetch the prescription that was just created for this consultation
+                var prescription = await _consultationService.GetPrescriptionByConsultationIdAsync(consultation.Id, cancellationToken);
+                prescriptionId = prescription?.Id;
+            }
+
+            var response = new
+            {
+                consultation.Id,
+                consultation.AppointmentId,
+                prescriptionId = prescriptionId,
+                message = "Consultation and prescription created successfully"
+            };
+
+            return CreatedAtAction(nameof(GetById), new { id = consultation.Id }, response);
         }
         catch (InvalidOperationException ex)
         {

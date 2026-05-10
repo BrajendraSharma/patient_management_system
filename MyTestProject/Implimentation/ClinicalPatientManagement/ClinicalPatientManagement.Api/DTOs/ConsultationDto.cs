@@ -19,6 +19,7 @@ public class ConsultationDto
 
 /// <summary>
 /// Data Transfer Object for creating a new consultation
+/// Includes medications to create a prescription in the same transaction
 /// </summary>
 public class CreateConsultationDto
 {
@@ -28,6 +29,7 @@ public class CreateConsultationDto
     public int Pulse { get; set; }
     public string Complaints { get; set; } = string.Empty;
     public string Diagnosis { get; set; } = string.Empty;
+    public List<CreateMedicationDto> Medications { get; set; } = new();
 }
 
 /// <summary>

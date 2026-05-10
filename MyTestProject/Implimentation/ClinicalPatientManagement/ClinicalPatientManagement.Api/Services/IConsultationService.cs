@@ -83,4 +83,9 @@ public interface IConsultationService
         DateTime? startDate = null,
         DateTime? endDate = null,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Get prescription by consultation ID
+    /// </summary>
+    Task<PrescriptionDto?> GetPrescriptionByConsultationIdAsync(int consultationId, CancellationToken cancellationToken = default);
 }
