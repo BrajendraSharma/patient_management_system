@@ -216,4 +216,47 @@ public class ConsultationsController : ControllerBase
             return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while retrieving consultations");
         }
     }
+
+    /// <summary>
+    /// Get patient consultation history with optional date filtering
+    /// GET /api/consultations/history/{patientId}?startDate=2024-01-01&endDate=2024-12-31
+    /// Step 12: Implement Patient History - View past visits with date filtering
+    /// </summary>
+    [HttpGet("history/{patientId}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<IEnumerable<ConsultationDto>>> GetPatientHistory(
+        int patientId,
+        [FromQuery] DateTime? startDate = null,
+        [FromQuery] DateTime? endDate = null,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            _logger.Information(
+                "Retrieving consultation history for patient {PatientId} from {StartDate} to {EndDate}",
+                patientId,
+                startDate?.ToString("yyyy-MM-dd") ?? "null",
+                endDate?.ToString("yyyy-MM-dd") ?? "null");
+
+            var history = await _consultationService.GetPatientHistoryAsync(
+                patientId,
+                startDate,
+                endDate,
+                cancellationToken);
+
+            return Ok(history);
+        }
+        catch (ArgumentException ex)
+        {
+            _logger.Warning(ex, "Invalid date range for patient history: {PatientId}", patientId);
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "Error retrieving consultation history for patient {PatientId}", patientId);
+            return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while retrieving the consultation history");
+        }
+    }
 }

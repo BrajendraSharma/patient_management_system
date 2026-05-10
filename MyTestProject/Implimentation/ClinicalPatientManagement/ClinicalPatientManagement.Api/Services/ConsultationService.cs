@@ -402,4 +402,81 @@ public class ConsultationService : IConsultationService
 
         return errors;
     }
+
+    /// <summary>
+    /// Get patient consultation history with optional date filtering
+    /// Step 12: Implement Patient History - View past visits with date filtering
+    /// 
+    /// Retrieves all consultations for a patient within an optional date range.
+    /// Results are ordered by creation date in descending order (most recent first).
+    /// Date filtering is inclusive on both startDate and endDate.
+    /// </summary>
+    /// <param name="patientId">Patient ID</param>
+    /// <param name="startDate">Start date for filtering (inclusive), null for no lower bound</param>
+    /// <param name="endDate">End date for filtering (inclusive), null for no upper bound</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Filtered consultations ordered by creation date descending</returns>
+    /// <exception cref="ArgumentException">Thrown when startDate > endDate</exception>
+    public async Task<IEnumerable<ConsultationDto>> GetPatientHistoryAsync(
+        int patientId,
+        DateTime? startDate = null,
+        DateTime? endDate = null,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Validate date range
+            if (startDate.HasValue && endDate.HasValue && startDate > endDate)
+            {
+                _logger.Warning("Invalid date range: startDate {StartDate} > endDate {EndDate}", startDate, endDate);
+                throw new ArgumentException("Start date cannot be greater than end date", nameof(startDate));
+            }
+
+            _logger.Information(
+                "Fetching consultation history for patient {PatientId} from {StartDate} to {EndDate}",
+                patientId,
+                startDate?.ToString("yyyy-MM-dd") ?? "beginning of time",
+                endDate?.ToString("yyyy-MM-dd") ?? "end of time");
+
+            // Get all consultations for the patient
+            var consultations = await _repository.GetByPatientIdAsync(patientId, cancellationToken);
+
+            // Apply date filtering
+            var filtered = consultations.AsEnumerable();
+
+            if (startDate.HasValue)
+            {
+                filtered = filtered.Where(c => c.CreatedAt >= startDate.Value);
+            }
+
+            if (endDate.HasValue)
+            {
+                // For end date, include entire day by comparing dates only
+                var endDateOnly = endDate.Value.Date;
+                filtered = filtered.Where(c => c.CreatedAt.Date <= endDateOnly);
+            }
+
+            // Order by creation date descending (most recent first)
+            var result = filtered
+                .OrderByDescending(c => c.CreatedAt)
+                .ToList();
+
+            _logger.Information(
+                "Retrieved {ConsultationCount} consultations from history for patient {PatientId}",
+                result.Count,
+                patientId);
+
+            return _mapper.Map<IEnumerable<ConsultationDto>>(result);
+        }
+        catch (ArgumentException)
+        {
+            // Re-throw validation errors as-is
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "Error fetching consultation history for patient {PatientId}", patientId);
+            throw;
+        }
+    }
 }
