@@ -60,8 +60,8 @@ public static class DependencyInjectionExtensions
     /// </summary>
     public static IServiceCollection AddApiInfrastructure(this IServiceCollection services)
     {
-        // Add any infrastructure services here
-        // Example: services.AddScoped<IUnitOfWork, UnitOfWork>();
+        // Step 11: Register Unit of Work for transaction management - ACID compliance
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         return services;
     }

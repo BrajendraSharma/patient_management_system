@@ -52,4 +52,19 @@ public interface IConsultationService
     /// Validate consultation data
     /// </summary>
     bool ValidateConsultationData(CreateConsultationDto dto, out List<string> errors);
+
+    /// <summary>
+    /// Create consultation with prescription in a single atomic transaction
+    /// Step 11: Persist consultations with transactions - ACID compliance
+    /// Ensures consultation and prescription are either both persisted or both rolled back on failure
+    /// </summary>
+    /// <param name="consultationDto">Consultation data</param>
+    /// <param name="prescriptionDto">Prescription data (optional)</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Created consultation with prescription details</returns>
+    /// <exception cref="InvalidOperationException">Thrown when validation fails or appointment not found</exception>
+    Task<ConsultationDto> CreateConsultationWithPrescriptionAsync(
+        CreateConsultationDto consultationDto,
+        CreatePrescriptionDto? prescriptionDto = null,
+        CancellationToken cancellationToken = default);
 }

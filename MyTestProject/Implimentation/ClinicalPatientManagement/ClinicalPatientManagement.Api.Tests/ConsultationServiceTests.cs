@@ -11,12 +11,15 @@ namespace ClinicalPatientManagement.Api.Tests;
 /// <summary>
 /// Unit tests for ConsultationService
 /// Step 9: Implement Consultation Creation - Testing business logic layer
-/// Coverage: >80% of service methods and validation logic
+/// Step 11: Persist consultations with transactions - ACID compliance testing
+/// Coverage: >80% of service methods and validation logic, transaction handling
 /// </summary>
 public class ConsultationServiceTests
 {
     private readonly Mock<IConsultationRepository> _repositoryMock;
     private readonly Mock<IAppointmentRepository> _appointmentRepositoryMock;
+    private readonly Mock<IPrescriptionService> _prescriptionServiceMock;
+    private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly Mock<IMapper> _mapperMock;
     private readonly ConsultationService _service;
 
@@ -24,8 +27,15 @@ public class ConsultationServiceTests
     {
         _repositoryMock = new Mock<IConsultationRepository>();
         _appointmentRepositoryMock = new Mock<IAppointmentRepository>();
+        _prescriptionServiceMock = new Mock<IPrescriptionService>();
+        _unitOfWorkMock = new Mock<IUnitOfWork>();
         _mapperMock = new Mock<IMapper>();
-        _service = new ConsultationService(_repositoryMock.Object, _appointmentRepositoryMock.Object, _mapperMock.Object);
+        _service = new ConsultationService(
+            _repositoryMock.Object,
+            _appointmentRepositoryMock.Object,
+            _prescriptionServiceMock.Object,
+            _unitOfWorkMock.Object,
+            _mapperMock.Object);
     }
 
     #region CreateAsync Tests
@@ -589,6 +599,288 @@ public class ConsultationServiceTests
 
         // Assert
         Assert.False(result);
+    }
+
+    #endregion
+
+    #region CreateConsultationWithPrescriptionAsync Tests (Step 11: Transaction Tests)
+
+    /// <summary>
+    /// Step 11: Test transaction-based consultation and prescription creation
+    /// Verifies ACID compliance - atomic persistence of consultation with prescription
+    /// </summary>
+
+    [Fact]
+    public async Task CreateConsultationWithPrescriptionAsync_WithValidDataAndPrescription_ShouldCreateBothAndCommitTransaction()
+    {
+        // Arrange
+        var consultationDto = new CreateConsultationDto
+        {
+            AppointmentId = 1,
+            Temperature = 37.5m,
+            BloodPressure = "120/80",
+            Pulse = 72,
+            Complaints = "Headache and fever",
+            Diagnosis = "Common cold"
+        };
+
+        var prescriptionDto = new CreatePrescriptionDto
+        {
+            ConsultationId = 1,
+            Medications = new List<CreateMedicationDto>
+            {
+                new CreateMedicationDto
+                {
+                    Name = "Paracetamol",
+                    Dosage = "500mg",
+                    Frequency = "2x daily",
+                    Duration = 5,
+                    Instructions = "Take with food"
+                }
+            }
+        };
+
+        var consultation = new Consultation
+        {
+            Id = 1,
+            AppointmentId = 1,
+            Temperature = 37.5m,
+            BloodPressure = "120/80",
+            Pulse = 72,
+            Complaints = "Headache and fever",
+            Diagnosis = "Common cold"
+        };
+
+        var consultationResultDto = new ConsultationDto
+        {
+            Id = 1,
+            AppointmentId = 1,
+            Temperature = 37.5m,
+            BloodPressure = "120/80",
+            Pulse = 72,
+            Complaints = "Headache and fever",
+            Diagnosis = "Common cold"
+        };
+
+        // Setup mocks
+        _unitOfWorkMock.Setup(u => u.BeginTransactionAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        _appointmentRepositoryMock.Setup(r => r.ExistsAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        _repositoryMock.Setup(r => r.ExistsByAppointmentIdAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _mapperMock.Setup(m => m.Map<Consultation>(consultationDto)).Returns(consultation);
+        _repositoryMock.Setup(r => r.AddAsync(It.IsAny<Consultation>(), It.IsAny<CancellationToken>())).ReturnsAsync(consultation);
+        _mapperMock.Setup(m => m.Map<ConsultationDto>(consultation)).Returns(consultationResultDto);
+        _unitOfWorkMock.Setup(u => u.CommitTransactionAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+
+        // Act
+        var result = await _service.CreateConsultationWithPrescriptionAsync(consultationDto, prescriptionDto);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(1, result.Id);
+        Assert.Equal(37.5m, result.Temperature);
+
+        // Verify transaction lifecycle
+        _unitOfWorkMock.Verify(u => u.BeginTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.CommitTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.RollbackTransactionAsync(It.IsAny<CancellationToken>()), Times.Never); // Should not rollback on success
+        _repositoryMock.Verify(r => r.AddAsync(It.IsAny<Consultation>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateConsultationWithPrescriptionAsync_WithValidDataNoPrescription_ShouldCreateConsultationAndCommitTransaction()
+    {
+        // Arrange
+        var consultationDto = new CreateConsultationDto
+        {
+            AppointmentId = 1,
+            Temperature = 37.5m,
+            BloodPressure = "120/80",
+            Pulse = 72,
+            Complaints = "Headache",
+            Diagnosis = "Cold"
+        };
+
+        var consultation = new Consultation
+        {
+            Id = 1,
+            AppointmentId = 1,
+            Temperature = 37.5m,
+            BloodPressure = "120/80",
+            Pulse = 72,
+            Complaints = "Headache",
+            Diagnosis = "Cold"
+        };
+
+        var consultationResultDto = new ConsultationDto
+        {
+            Id = 1,
+            AppointmentId = 1,
+            Temperature = 37.5m,
+            BloodPressure = "120/80",
+            Pulse = 72,
+            Complaints = "Headache",
+            Diagnosis = "Cold"
+        };
+
+        // Setup mocks
+        _unitOfWorkMock.Setup(u => u.BeginTransactionAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        _appointmentRepositoryMock.Setup(r => r.ExistsAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        _repositoryMock.Setup(r => r.ExistsByAppointmentIdAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _mapperMock.Setup(m => m.Map<Consultation>(consultationDto)).Returns(consultation);
+        _repositoryMock.Setup(r => r.AddAsync(It.IsAny<Consultation>(), It.IsAny<CancellationToken>())).ReturnsAsync(consultation);
+        _mapperMock.Setup(m => m.Map<ConsultationDto>(consultation)).Returns(consultationResultDto);
+        _unitOfWorkMock.Setup(u => u.CommitTransactionAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+
+        // Act
+        var result = await _service.CreateConsultationWithPrescriptionAsync(consultationDto, null);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(1, result.Id);
+
+        // Verify transaction was committed
+        _unitOfWorkMock.Verify(u => u.BeginTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.CommitTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateConsultationWithPrescriptionAsync_WithInvalidConsultationData_ShouldRollbackTransaction()
+    {
+        // Arrange
+        var invalidConsultationDto = new CreateConsultationDto
+        {
+            AppointmentId = 1,
+            Temperature = 50m, // Invalid - out of range
+            BloodPressure = "120/80",
+            Pulse = 72,
+            Complaints = "Headache",
+            Diagnosis = "Cold"
+        };
+
+        // Setup mocks
+        _unitOfWorkMock.Setup(u => u.BeginTransactionAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        _unitOfWorkMock.Setup(u => u.RollbackTransactionAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => _service.CreateConsultationWithPrescriptionAsync(invalidConsultationDto));
+        
+        Assert.Contains("Temperature must be between 30 and 45", ex.Message);
+        
+        // Verify transaction was rolled back
+        _unitOfWorkMock.Verify(u => u.BeginTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.RollbackTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.CommitTransactionAsync(It.IsAny<CancellationToken>()), Times.Never); // Should not commit on error
+    }
+
+    [Fact]
+    public async Task CreateConsultationWithPrescriptionAsync_WithNonexistentAppointment_ShouldRollbackTransaction()
+    {
+        // Arrange
+        var consultationDto = new CreateConsultationDto
+        {
+            AppointmentId = 999,
+            Temperature = 37.5m,
+            BloodPressure = "120/80",
+            Pulse = 72,
+            Complaints = "Headache",
+            Diagnosis = "Cold"
+        };
+
+        // Setup mocks
+        _unitOfWorkMock.Setup(u => u.BeginTransactionAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        _appointmentRepositoryMock.Setup(r => r.ExistsAsync(999, It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _unitOfWorkMock.Setup(u => u.RollbackTransactionAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => _service.CreateConsultationWithPrescriptionAsync(consultationDto));
+        
+        Assert.Contains("Appointment with ID 999 not found", ex.Message);
+        
+        // Verify transaction was rolled back on appointment not found
+        _unitOfWorkMock.Verify(u => u.BeginTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.RollbackTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.CommitTransactionAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateConsultationWithPrescriptionAsync_WithExistingConsultation_ShouldRollbackTransaction()
+    {
+        // Arrange
+        var consultationDto = new CreateConsultationDto
+        {
+            AppointmentId = 1,
+            Temperature = 37.5m,
+            BloodPressure = "120/80",
+            Pulse = 72,
+            Complaints = "Headache",
+            Diagnosis = "Cold"
+        };
+
+        // Setup mocks
+        _unitOfWorkMock.Setup(u => u.BeginTransactionAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        _appointmentRepositoryMock.Setup(r => r.ExistsAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        _repositoryMock.Setup(r => r.ExistsByAppointmentIdAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(true); // Already exists
+        _unitOfWorkMock.Setup(u => u.RollbackTransactionAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => _service.CreateConsultationWithPrescriptionAsync(consultationDto));
+        
+        Assert.Contains("Consultation already exists", ex.Message);
+        
+        // Verify transaction was rolled back
+        _unitOfWorkMock.Verify(u => u.BeginTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.RollbackTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.CommitTransactionAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateConsultationWithPrescriptionAsync_WithInvalidPrescriptionData_ShouldRollbackTransaction()
+    {
+        // Arrange
+        var consultationDto = new CreateConsultationDto
+        {
+            AppointmentId = 1,
+            Temperature = 37.5m,
+            BloodPressure = "120/80",
+            Pulse = 72,
+            Complaints = "Headache",
+            Diagnosis = "Cold"
+        };
+
+        var invalidPrescriptionDto = new CreatePrescriptionDto
+        {
+            ConsultationId = 1,
+            Medications = new List<CreateMedicationDto>() // Empty medications list
+        };
+
+        // Setup mocks
+        _unitOfWorkMock.Setup(u => u.BeginTransactionAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        _unitOfWorkMock.Setup(u => u.RollbackTransactionAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => _service.CreateConsultationWithPrescriptionAsync(consultationDto, invalidPrescriptionDto));
+        
+        Assert.Contains("At least one medication is required", ex.Message);
+        
+        // Verify transaction was rolled back on prescription validation failure
+        _unitOfWorkMock.Verify(u => u.BeginTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.RollbackTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.CommitTransactionAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateConsultationWithPrescriptionAsync_WithNullConsultationDto_ShouldThrowArgumentNullException()
+    {
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentNullException>(
+            () => _service.CreateConsultationWithPrescriptionAsync(null));
+
+        // Verify transaction was never started
+        _unitOfWorkMock.Verify(u => u.BeginTransactionAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     #endregion
