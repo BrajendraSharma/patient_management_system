@@ -222,8 +222,7 @@
                                                     </label>
                                                     <InputText 
                                                         class="form-control form-control-sm"
-                                                        value="@med.Name"
-                                                        @onchange="@((ChangeEventArgs e) => UpdateMedication(index, nameof(med.Name), e.Value?.ToString() ?? string.Empty))"
+                                                        @bind-value="med.Name"
                                                         placeholder="e.g., Paracetamol" />
                                                 </div>
                                             </div>
@@ -236,8 +235,7 @@
                                                     </label>
                                                     <InputText 
                                                         class="form-control form-control-sm"
-                                                        value="@med.Dosage"
-                                                        @onchange="@((ChangeEventArgs e) => UpdateMedication(index, nameof(med.Dosage), e.Value?.ToString() ?? string.Empty))"
+                                                        @bind-value="med.Dosage"
                                                         placeholder="e.g., 500mg" />
                                                 </div>
                                             </div>
@@ -252,8 +250,7 @@
                                                     </label>
                                                     <InputText 
                                                         class="form-control form-control-sm"
-                                                        value="@med.Frequency"
-                                                        @onchange="@((ChangeEventArgs e) => UpdateMedication(index, nameof(med.Frequency), e.Value?.ToString() ?? string.Empty))"
+                                                        @bind-value="med.Frequency"
                                                         placeholder="e.g., Twice daily" />
                                                 </div>
                                             </div>
@@ -266,8 +263,7 @@
                                                     </label>
                                                     <InputNumber 
                                                         class="form-control form-control-sm"
-                                                        value="@med.Duration"
-                                                        @onchange="@((ChangeEventArgs e) => UpdateMedicationDuration(index, e.Value))" />
+                                                        @bind-value="med.Duration" />
                                                 </div>
                                             </div>
 
@@ -277,8 +273,7 @@
                                                     <label class="form-label">Instructions</label>
                                                     <InputText 
                                                         class="form-control form-control-sm"
-                                                        value="@med.Instructions"
-                                                        @onchange="@((ChangeEventArgs e) => UpdateMedication(index, nameof(med.Instructions), e.Value?.ToString() ?? string.Empty))"
+                                                        @bind-value="med.Instructions"
                                                         placeholder="e.g., After meals" />
                                                 </div>
                                             </div>
@@ -329,7 +324,6 @@
     private string? errorMessage;
     private bool isLoading = true;
     private bool isSubmitting = false;
-    private EditContext? editContext;
 
     protected override async Task OnInitializedAsync()
     {
@@ -337,13 +331,7 @@
         medications.Add(new MedicationCreateModel());
     }
 
-    protected override void OnParametersSet()
-    {
-        if (editContext == null && consultation != null)
-        {
-            editContext = new EditContext(consultation);
-        }
-    }
+
 
     private async Task LoadAppointment()
     {
@@ -378,7 +366,7 @@
 
     private async Task HandleSubmit()
     {
-        if (isSubmitting || appointment == null || editContext == null)
+        if (isSubmitting || appointment == null)
             return;
 
         try
@@ -409,7 +397,11 @@
 
             var response = await Http.PostAsJsonAsync("/api/consultations", consultationPayload);
 
-            if (response.IsSuccessStatusCode)
+            if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
+            {
+                errorMessage = "This consultation already exists or there is a conflict with the appointment. Please check and try again.";
+            }
+            else if (response.IsSuccessStatusCode)
             {
                 // Parse the response to get the prescription ID
                 var content = await response.Content.ReadAsStringAsync();
@@ -462,43 +454,6 @@
         medications.Add(new MedicationCreateModel());
     }
 
-    private void UpdateMedication(int index, string propertyName, string value)
-    {
-        if (index >= 0 && index < medications.Count)
-        {
-            var medication = medications[index];
-            switch (propertyName)
-            {
-                case nameof(MedicationCreateModel.Name):
-                    medication.Name = value;
-                    break;
-                case nameof(MedicationCreateModel.Dosage):
-                    medication.Dosage = value;
-                    break;
-                case nameof(MedicationCreateModel.Frequency):
-                    medication.Frequency = value;
-                    break;
-                case nameof(MedicationCreateModel.Instructions):
-                    medication.Instructions = value;
-                    break;
-            }
-            medications[index] = medication;
-            StateHasChanged();
-        }
-    }
-
-    private void UpdateMedicationDuration(int index, object? value)
-    {
-        if (index >= 0 && index < medications.Count && value != null)
-        {
-            if (int.TryParse(value.ToString(), out int duration))
-            {
-                medications[index].Duration = duration;
-                StateHasChanged();
-            }
-        }
-    }
-
     private void RemoveMedication(int index)
     {
         if (medications.Count > 1)
@@ -512,3 +467,4 @@
         Navigation.NavigateTo("/appointments");
     }
 }
+

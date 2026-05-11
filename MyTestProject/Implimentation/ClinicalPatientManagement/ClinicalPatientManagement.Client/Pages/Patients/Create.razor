@@ -147,12 +147,6 @@
     private CreatePatientModel newPatient = new();
     private string errorMessage = string.Empty;
     private bool isSubmitting = false;
-    private EditContext? editContext;
-
-    protected override void OnInitialized()
-    {
-        editContext = new EditContext(newPatient);
-    }
 
     private async Task SavePatient()
     {
@@ -162,6 +156,14 @@
         {
             var result = await PatientApiClient.CreateAsync(newPatient);
             Navigation.NavigateTo("/patients");
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Conflict)
+        {
+            errorMessage = "A patient with this phone number already exists. Please use a different phone number.";
+        }
+        catch (HttpRequestException ex)
+        {
+            errorMessage = $"Server error ({ex.StatusCode}): {ex.Message}";
         }
         catch (Exception ex)
         {

@@ -88,10 +88,10 @@
                             <label for="appointmentDate" class="form-label">
                                 Date & Time <span class="text-danger">*</span>
                             </label>
-                            <input type="datetime-local" 
-                                   id="appointmentDate" 
-                                   class="form-control form-control-lg" 
-                                   @bind="model!.AppointmentDate" />
+                            <InputDate 
+                                id="appointmentDate" 
+                                class="form-control form-control-lg" 
+                                @bind-value="model!.AppointmentDate" />
                             <ValidationMessage For="@(() => model!.AppointmentDate)" class="d-block text-danger small mt-1" />
                             @if (conflictMessage != null)
                             {
@@ -180,7 +180,6 @@
     private string? errorMessage;
     private string? successMessage;
     private string? conflictMessage;
-    private EditContext? editContext;
 
     protected override async Task OnInitializedAsync()
     {
@@ -227,13 +226,7 @@
         }
     }
 
-    protected override void OnParametersSet()
-    {
-        if (editContext == null && model != null)
-        {
-            editContext = new EditContext(model);
-        }
-    }
+
 
     private async Task CheckConflict()
     {
@@ -253,7 +246,7 @@
 
     private async Task HandleSubmit()
     {
-        if (model == null || editContext == null)
+        if (model == null)
             return;
 
         try
@@ -283,6 +276,14 @@
 
             await Task.Delay(1500);
             NavigationManager.NavigateTo("/appointments");
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Conflict)
+        {
+            errorMessage = "This appointment slot conflicts with an existing appointment. Please choose a different time.";
+        }
+        catch (HttpRequestException ex)
+        {
+            errorMessage = $"Server error ({ex.StatusCode}): {ex.Message}";
         }
         catch (Exception ex)
         {
