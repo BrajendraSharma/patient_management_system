@@ -26,8 +26,7 @@ namespace ClinicalPatientManagement.Tests.UI
 
         public AccessibilityTests()
         {
-            var config = Configuration.Default;
-            _htmlParser = new HtmlParser(config);
+            _htmlParser = new HtmlParser();
         }
 
         #region Semantic HTML Tests
@@ -462,8 +461,12 @@ namespace ClinicalPatientManagement.Tests.UI
             var html = @"
                 <html>
                 <body>
-                    <button tabindex=""1"">Button 1</button>
-                    <button tabindex=""2"">Button 2</button>
+                    <!-- Good: Use tabindex=""0"" or default (no explicit tabindex) -->
+                    <button tabindex=""0"">Button 1</button>
+                    <button>Button 2</button>
+                    <!-- Bad pattern (should NOT appear in production code): -->
+                    <!-- <button tabindex=""1"">Button 1</button> -->
+                    <!-- <button tabindex=""2"">Button 2</button> -->
                 </body>
                 </html>";
 

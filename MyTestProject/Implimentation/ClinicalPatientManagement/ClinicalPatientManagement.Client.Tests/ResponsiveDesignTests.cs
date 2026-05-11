@@ -249,7 +249,7 @@ namespace ClinicalPatientManagement.Tests.UI
             // Act & Assert
             // No horizontal scroll should appear at 200% zoom
             // Content should reflow properly
-            Assert.True(true, "Text zoom readability verified");
+            Assert.True(zoomLevel > 1.0f, "Text should be readable at 200% zoom level");
         }
 
         [Fact(DisplayName = "Text: Should not have justified alignment (left-aligned preferred)")]
