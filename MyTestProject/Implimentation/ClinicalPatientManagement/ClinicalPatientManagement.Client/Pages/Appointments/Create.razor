@@ -3,6 +3,7 @@
 @using ClinicalPatientManagement.Client.Models
 @using ClinicalPatientManagement.Client.Services
 @using Microsoft.AspNetCore.Components.Authorization
+@using System.ComponentModel.DataAnnotations
 @attribute [Authorize]
 @inject IAppointmentApiClient AppointmentApiClient
 @inject IPatientApiClient PatientApiClient
@@ -52,15 +53,25 @@
     }
     else
     {
-        <div class="card mt-4">
+        <div class="card mt-4 shadow-sm">
             <div class="card-body p-4">
-                <EditForm Model="model" OnValidSubmit="HandleSubmit">
+                <EditForm Model="model" OnValidSubmit="HandleSubmit" OnInvalidSubmit="HandleInvalidSubmit">
                     <DataAnnotationsValidator />
+
+                    <!-- Validation Summary -->
+                    <div class="mb-3">
+                        <ValidationSummary class="alert alert-warning" />
+                    </div>
 
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <label for="patientId" class="form-label">Patient <span class="text-danger">*</span></label>
-                            <InputSelect id="patientId" class="form-control form-control-lg" @bind-value="model!.PatientId">
+                            <label for="patientId" class="form-label">
+                                Patient <span class="text-danger">*</span>
+                            </label>
+                            <InputSelect 
+                                id="patientId" 
+                                class="form-select form-select-lg" 
+                                @bind-value="model!.PatientId">
                                 <option value="0">-- Select Patient --</option>
                                 @if (patients != null)
                                 {
@@ -70,14 +81,18 @@
                                     }
                                 }
                             </InputSelect>
-                            <ValidationMessage For="@(() => model!.PatientId)" class="d-block text-danger mt-1" />
+                            <ValidationMessage For="@(() => model!.PatientId)" class="d-block text-danger small mt-1" />
                         </div>
 
                         <div class="col-md-6">
-                            <label for="appointmentDate" class="form-label">Date & Time <span class="text-danger">*</span></label>
-                            <input type="datetime-local" id="appointmentDate" class="form-control form-control-lg" 
+                            <label for="appointmentDate" class="form-label">
+                                Date & Time <span class="text-danger">*</span>
+                            </label>
+                            <input type="datetime-local" 
+                                   id="appointmentDate" 
+                                   class="form-control form-control-lg" 
                                    @bind="model!.AppointmentDate" />
-                            <ValidationMessage For="@(() => model!.AppointmentDate)" class="d-block text-danger mt-1" />
+                            <ValidationMessage For="@(() => model!.AppointmentDate)" class="d-block text-danger small mt-1" />
                             @if (conflictMessage != null)
                             {
                                 <small class="d-block text-warning mt-2">
@@ -89,24 +104,34 @@
 
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
-                            <InputSelect id="status" class="form-control form-control-lg" @bind-value="model!.Status">
+                            <label for="status" class="form-label">
+                                Status <span class="text-danger">*</span>
+                            </label>
+                            <InputSelect 
+                                id="status" 
+                                class="form-select form-select-lg" 
+                                @bind-value="model!.Status">
+                                <option value="">-- Select Status --</option>
                                 <option value="Scheduled">Scheduled</option>
                                 <option value="Completed">Completed</option>
                                 <option value="Cancelled">Cancelled</option>
                                 <option value="No-Show">No-Show</option>
                             </InputSelect>
-                            <ValidationMessage For="@(() => model!.Status)" class="d-block text-danger mt-1" />
+                            <ValidationMessage For="@(() => model!.Status)" class="d-block text-danger small mt-1" />
                         </div>
                     </div>
 
                     <div class="row mb-3">
                         <div class="col-md-12">
                             <label for="notes" class="form-label">Notes (Optional)</label>
-                            <InputTextArea id="notes" class="form-control form-control-lg" rows="4" 
-                                          placeholder="Add any notes about this appointment..."
-                                          @bind-value="model!.Notes" />
-                            <small class="form-text text-muted">Max 500 characters</small>
+                            <InputTextArea 
+                                id="notes" 
+                                class="form-control form-control-lg" 
+                                rows="4" 
+                                placeholder="Add any notes about this appointment..."
+                                @bind-value="model!.Notes" />
+                            <ValidationMessage For="@(() => model!.Notes)" class="d-block text-danger small mt-1" />
+                            <small class="form-text text-muted">Max 1000 characters</small>
                         </div>
                     </div>
 
@@ -116,7 +141,7 @@
                                 @if (isSubmitting)
                                 {
                                     <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                    <span>Processing</span><span>.&nbsp;.&nbsp;.</span>
+                                    <span>Processing...</span>
                                 }
                                 else
                                 {
@@ -155,6 +180,7 @@
     private string? errorMessage;
     private string? successMessage;
     private string? conflictMessage;
+    private EditContext? editContext;
 
     protected override async Task OnInitializedAsync()
     {
@@ -201,6 +227,14 @@
         }
     }
 
+    protected override void OnParametersSet()
+    {
+        if (editContext == null && model != null)
+        {
+            editContext = new EditContext(model);
+        }
+    }
+
     private async Task CheckConflict()
     {
         if (model?.PatientId > 0 && model.AppointmentDate > DateTime.Now)
@@ -219,7 +253,7 @@
 
     private async Task HandleSubmit()
     {
-        if (model == null)
+        if (model == null || editContext == null)
             return;
 
         try
@@ -258,5 +292,10 @@
         {
             isSubmitting = false;
         }
+    }
+
+    private void HandleInvalidSubmit()
+    {
+        errorMessage = "Please fix the validation errors above before submitting.";
     }
 }

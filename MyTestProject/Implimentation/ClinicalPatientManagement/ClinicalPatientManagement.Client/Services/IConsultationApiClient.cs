@@ -22,7 +22,7 @@ public interface IConsultationApiClient
     /// <summary>
     /// Create new consultation
     /// </summary>
-    Task<ConsultationModel> CreateAsync(CreateConsultationModel createModel);
+    Task<ConsultationModel> CreateAsync(ConsultationCreateModel createModel);
 
     /// <summary>
     /// Update consultation

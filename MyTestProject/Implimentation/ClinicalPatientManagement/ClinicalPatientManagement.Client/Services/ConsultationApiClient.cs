@@ -55,7 +55,7 @@ public class ConsultationApiClient : IConsultationApiClient
     /// <summary>
     /// Create new consultation
     /// </summary>
-    public async Task<ConsultationModel> CreateAsync(CreateConsultationModel createModel)
+    public async Task<ConsultationModel> CreateAsync(ConsultationCreateModel createModel)
     {
         try
         {

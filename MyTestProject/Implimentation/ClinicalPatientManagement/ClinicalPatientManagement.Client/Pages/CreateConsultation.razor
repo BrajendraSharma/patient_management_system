@@ -2,6 +2,8 @@
 @using System.Text.Json
 @using ClinicalPatientManagement.Client.Models
 @using ClinicalPatientManagement.Client.Services
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Components.Forms
 @inject HttpClient Http
 @inject IPatientApiClient PatientApiClient
 @inject NavigationManager Navigation
@@ -11,174 +13,305 @@
 <div class="container mt-4">
     <div class="row mb-4">
         <div class="col-12">
-            <h2>Create Consultation</h2>
+            <h2>
+                <i class="bi bi-stethoscope"></i> Create Consultation
+            </h2>
         </div>
     </div>
 
     @if (isLoading)
     {
-        <div class="alert alert-info">Loading appointment details...</div>
+        <div class="alert alert-info">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            Loading appointment details...
+        </div>
     }
     else if (errorMessage != null)
     {
-        <div class="alert alert-danger">
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-circle"></i>
             <strong>Error:</strong> @errorMessage
-            <button class="btn btn-secondary btn-sm ms-2" @onclick="GoBack">Back</button>
+            <button type="button" class="btn-close" @onclick="() => errorMessage = null"></button>
         </div>
     }
-    else if (appointment == null)
+
+    @if (appointment != null && patient != null && !isLoading)
     {
-        <div class="alert alert-warning">Appointment not found.</div>
-        <button class="btn btn-secondary" @onclick="GoBack">Back</button>
-    }
-    else
-    {
-        <div class="card mb-4">
-            <div class="card-header bg-light">
-                <h5 class="mb-0">Appointment Details</h5>
+        <!-- Appointment Info Card -->
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-light border-bottom">
+                <h5 class="mb-0">
+                    <i class="bi bi-info-circle"></i> Appointment Information
+                </h5>
             </div>
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-6">
-                        <p><strong>Patient:</strong> @patient?.FullName</p>
-                        <p><strong>Age:</strong> @patient?.Age years</p>
+                        <p class="mb-2">
+                            <strong>Patient:</strong> @patient.FullName
+                        </p>
+                        <p class="mb-0">
+                            <strong>Age:</strong> @patient.Age years
+                        </p>
                     </div>
                     <div class="col-md-6">
-                        <p><strong>Appointment Date:</strong> @appointment.AppointmentDate.ToString("dd-MM-yyyy")</p>
-                        <p><strong>Status:</strong> <span class="badge bg-info">@appointment.Status</span></p>
+                        <p class="mb-2">
+                            <strong>Appointment Date:</strong> 
+                            <span class="badge bg-primary">@appointment.AppointmentDate.ToString("dd-MMM-yyyy HH:mm")</span>
+                        </p>
+                        <p class="mb-0">
+                            <strong>Status:</strong> 
+                            <span class="badge bg-success">@appointment.Status</span>
+                        </p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="card">
-            <div class="card-header bg-light">
-                <h5 class="mb-0">Consultation Information</h5>
+        <!-- Consultation Form Card -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-light border-bottom">
+                <h5 class="mb-0">
+                    <i class="bi bi-form-check"></i> Consultation Details
+                </h5>
             </div>
             <div class="card-body">
-                @if (!string.IsNullOrEmpty(errorMessage))
-                {
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        @errorMessage
-                        <button type="button" class="btn-close" @onclick="() => errorMessage = null"></button>
-                    </div>
-                }
+                <EditForm Model="@consultation" OnValidSubmit="HandleSubmit" OnInvalidSubmit="HandleInvalidSubmit">
+                    <DataAnnotationsValidator />
 
-                <form @onsubmit="HandleSubmit" @onsubmit:preventDefault="true">
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <label class="form-label">Temperature (°C) <span class="text-danger">*</span></label>
-                            <input type="number" step="0.1" class="form-control" 
-                                @bind="consultation.Temperature" 
-                                @bind:event="oninput" required />
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Blood Pressure <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" 
-                                @bind="consultation.BloodPressure" 
-                                @bind:event="oninput" 
-                                placeholder="e.g., 120/80" required />
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Pulse (bpm) <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" 
-                                @bind="consultation.Pulse" 
-                                @bind:event="oninput" required />
-                        </div>
-                    </div>
-
+                    <!-- Validation Summary -->
                     <div class="mb-3">
-                        <label class="form-label">Complaints <span class="text-danger">*</span></label>
-                        <textarea class="form-control" rows="3" 
-                            @bind="consultation.Complaints" 
-                            @bind:event="oninput" required></textarea>
+                        <ValidationSummary class="alert alert-warning" />
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Diagnosis <span class="text-danger">*</span></label>
-                        <textarea class="form-control" rows="3" 
-                            @bind="consultation.Diagnosis" 
-                            @bind:event="oninput" required></textarea>
-                    </div>
-
-                    <div class="card mt-4 mb-3">
+                    <!-- Vital Signs Section -->
+                    <div class="card mb-4 border-light">
                         <div class="card-header bg-light">
-                            <h6 class="mb-0">Medications <span class="text-danger">*</span></h6>
+                            <h6 class="mb-0">
+                                <i class="bi bi-heart-pulse"></i> Vital Signs <span class="text-danger">*</span>
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <!-- Temperature -->
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="temperature" class="form-label">
+                                            Temperature (°C) <span class="text-danger">*</span>
+                                        </label>
+                                        <InputNumber 
+                                            id="temperature"
+                                            class="form-control form-control-lg" 
+                                            @bind-value="consultation.Temperature"
+                                            step="0.1"
+                                            aria-label="Temperature" />
+                                        <ValidationMessage For="@(() => consultation.Temperature)" class="d-block text-danger small mt-1" />
+                                        <small class="form-text text-muted">Range: 30°C - 45°C</small>
+                                    </div>
+                                </div>
+
+                                <!-- Blood Pressure -->
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="bloodPressure" class="form-label">
+                                            Blood Pressure <span class="text-danger">*</span>
+                                        </label>
+                                        <InputText 
+                                            id="bloodPressure"
+                                            class="form-control form-control-lg" 
+                                            @bind-value="consultation.BloodPressure"
+                                            placeholder="e.g., 120/80"
+                                            aria-label="Blood Pressure" />
+                                        <ValidationMessage For="@(() => consultation.BloodPressure)" class="d-block text-danger small mt-1" />
+                                        <small class="form-text text-muted">Format: Systolic/Diastolic</small>
+                                    </div>
+                                </div>
+
+                                <!-- Pulse -->
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="pulse" class="form-label">
+                                            Pulse (bpm) <span class="text-danger">*</span>
+                                        </label>
+                                        <InputNumber 
+                                            id="pulse"
+                                            class="form-control form-control-lg" 
+                                            @bind-value="consultation.Pulse"
+                                            aria-label="Pulse Rate" />
+                                        <ValidationMessage For="@(() => consultation.Pulse)" class="d-block text-danger small mt-1" />
+                                        <small class="form-text text-muted">Range: 40 - 200 bpm</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Complaints & Diagnosis Section -->
+                    <div class="card mb-4 border-light">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">
+                                <i class="bi bi-file-medical"></i> Clinical Notes <span class="text-danger">*</span>
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <!-- Complaints -->
+                            <div class="mb-3">
+                                <label for="complaints" class="form-label">
+                                    Patient Complaints <span class="text-danger">*</span>
+                                </label>
+                                <InputTextArea 
+                                    id="complaints"
+                                    class="form-control form-control-lg" 
+                                    rows="3"
+                                    @bind-value="consultation.Complaints"
+                                    placeholder="Describe the patient's complaints in detail..."
+                                    aria-label="Patient Complaints" />
+                                <ValidationMessage For="@(() => consultation.Complaints)" class="d-block text-danger small mt-1" />
+                                <small class="form-text text-muted">Minimum 5 characters, Maximum 1000 characters</small>
+                            </div>
+
+                            <!-- Diagnosis -->
+                            <div class="mb-3">
+                                <label for="diagnosis" class="form-label">
+                                    Diagnosis <span class="text-danger">*</span>
+                                </label>
+                                <InputTextArea 
+                                    id="diagnosis"
+                                    class="form-control form-control-lg" 
+                                    rows="3"
+                                    @bind-value="consultation.Diagnosis"
+                                    placeholder="Enter the clinical diagnosis..."
+                                    aria-label="Diagnosis" />
+                                <ValidationMessage For="@(() => consultation.Diagnosis)" class="d-block text-danger small mt-1" />
+                                <small class="form-text text-muted">Minimum 5 characters, Maximum 1000 characters</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Medications Section -->
+                    <div class="card mb-4 border-light">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">
+                                <i class="bi bi-capsule"></i> Prescribed Medications <span class="text-danger">*</span>
+                            </h6>
                         </div>
                         <div class="card-body">
                             @for (int i = 0; i < medications.Count; i++)
                             {
-                                int index = i; // Capture index for closure
+                                int index = i;
                                 var med = medications[index];
                                 <div class="card mb-3 border-secondary">
+                                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0">Medication @(index + 1)</h6>
+                                        @if (medications.Count > 1)
+                                        {
+                                            <button type="button" class="btn btn-sm btn-danger" @onclick="() => RemoveMedication(index)">
+                                                <i class="bi bi-trash"></i> Remove
+                                            </button>
+                                        }
+                                    </div>
                                     <div class="card-body">
                                         <div class="row">
-                                            <div class="col-md-6 mb-2">
-                                                <label class="form-label">Medication Name</label>
-                                                <input type="text" class="form-control" 
-                                                    value="@med.Name" 
-                                                    @onchange="@((ChangeEventArgs e) => UpdateMedication(index, nameof(med.Name), e.Value?.ToString() ?? string.Empty))" />
+                                            <!-- Medication Name -->
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label">
+                                                        Medication Name <span class="text-danger">*</span>
+                                                    </label>
+                                                    <InputText 
+                                                        class="form-control form-control-sm"
+                                                        value="@med.Name"
+                                                        @onchange="@((ChangeEventArgs e) => UpdateMedication(index, nameof(med.Name), e.Value?.ToString() ?? string.Empty))"
+                                                        placeholder="e.g., Paracetamol" />
+                                                </div>
                                             </div>
-                                            <div class="col-md-6 mb-2">
-                                                <label class="form-label">Dosage</label>
-                                                <input type="text" class="form-control" 
-                                                    value="@med.Dosage" 
-                                                    @onchange="@((ChangeEventArgs e) => UpdateMedication(index, nameof(med.Dosage), e.Value?.ToString() ?? string.Empty))" 
-                                                    placeholder="e.g., 500mg" />
+
+                                            <!-- Dosage -->
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label">
+                                                        Dosage <span class="text-danger">*</span>
+                                                    </label>
+                                                    <InputText 
+                                                        class="form-control form-control-sm"
+                                                        value="@med.Dosage"
+                                                        @onchange="@((ChangeEventArgs e) => UpdateMedication(index, nameof(med.Dosage), e.Value?.ToString() ?? string.Empty))"
+                                                        placeholder="e.g., 500mg" />
+                                                </div>
                                             </div>
                                         </div>
+
                                         <div class="row">
-                                            <div class="col-md-4 mb-2">
-                                                <label class="form-label">Frequency</label>
-                                                <input type="text" class="form-control" 
-                                                    value="@med.Frequency" 
-                                                    @onchange="@((ChangeEventArgs e) => UpdateMedication(index, nameof(med.Frequency), e.Value?.ToString() ?? string.Empty))" 
-                                                    placeholder="e.g., Twice daily" />
+                                            <!-- Frequency -->
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <label class="form-label">
+                                                        Frequency <span class="text-danger">*</span>
+                                                    </label>
+                                                    <InputText 
+                                                        class="form-control form-control-sm"
+                                                        value="@med.Frequency"
+                                                        @onchange="@((ChangeEventArgs e) => UpdateMedication(index, nameof(med.Frequency), e.Value?.ToString() ?? string.Empty))"
+                                                        placeholder="e.g., Twice daily" />
+                                                </div>
                                             </div>
-                                            <div class="col-md-4 mb-2">
-                                                <label class="form-label">Duration (days)</label>
-                                                <input type="number" class="form-control" 
-                                                    value="@med.Duration" 
-                                                    @onchange="@((ChangeEventArgs e) => UpdateMedicationDuration(index, e.Value))" />
+
+                                            <!-- Duration -->
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <label class="form-label">
+                                                        Duration (days) <span class="text-danger">*</span>
+                                                    </label>
+                                                    <InputNumber 
+                                                        class="form-control form-control-sm"
+                                                        value="@med.Duration"
+                                                        @onchange="@((ChangeEventArgs e) => UpdateMedicationDuration(index, e.Value))" />
+                                                </div>
                                             </div>
-                                            <div class="col-md-4 mb-2">
-                                                <label class="form-label">Instructions</label>
-                                                <input type="text" class="form-control" 
-                                                    value="@med.Instructions" 
-                                                    @onchange="@((ChangeEventArgs e) => UpdateMedication(index, nameof(med.Instructions), e.Value?.ToString() ?? string.Empty))" 
-                                                    placeholder="e.g., After meals" />
+
+                                            <!-- Instructions -->
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Instructions</label>
+                                                    <InputText 
+                                                        class="form-control form-control-sm"
+                                                        value="@med.Instructions"
+                                                        @onchange="@((ChangeEventArgs e) => UpdateMedication(index, nameof(med.Instructions), e.Value?.ToString() ?? string.Empty))"
+                                                        placeholder="e.g., After meals" />
+                                                </div>
                                             </div>
                                         </div>
-                                        <button type="button" class="btn btn-sm btn-danger" @onclick="() => RemoveMedication(index)">
-                                            <i class="bi bi-trash"></i> Remove
-                                        </button>
                                     </div>
                                 </div>
                             }
 
-                            <button type="button" class="btn btn-sm btn-success" @onclick="AddMedication">
-                                <i class="bi bi-plus-circle"></i> Add Medication
+                            <button type="button" class="btn btn-sm btn-outline-success" @onclick="AddMedication">
+                                <i class="bi bi-plus-circle"></i> Add Another Medication
                             </button>
                         </div>
                     </div>
 
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                    <!-- Form Actions -->
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-success btn-lg" disabled="@isSubmitting">
                             @if (isSubmitting)
                             {
-                                <span class="spinner-border spinner-border-sm me-2"></span>
+                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                                 <span>Saving...</span>
                             }
                             else
                             {
-                                <span><i class="bi bi-check-circle"></i> Save Consultation</span>
+                                <i class="bi bi-check-circle"></i>
+                                <span>Save Consultation</span>
                             }
                         </button>
-                        <button type="button" class="btn btn-secondary" @onclick="GoBack" disabled="@isSubmitting">
+                        <button type="button" class="btn btn-secondary btn-lg" @onclick="GoBack" disabled="@isSubmitting">
                             <i class="bi bi-arrow-left"></i> Cancel
                         </button>
                     </div>
-                </form>
+                </EditForm>
             </div>
         </div>
     }
@@ -196,11 +329,20 @@
     private string? errorMessage;
     private bool isLoading = true;
     private bool isSubmitting = false;
+    private EditContext? editContext;
 
     protected override async Task OnInitializedAsync()
     {
         await LoadAppointment();
         medications.Add(new MedicationCreateModel());
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (editContext == null && consultation != null)
+        {
+            editContext = new EditContext(consultation);
+        }
     }
 
     private async Task LoadAppointment()
@@ -216,8 +358,6 @@
             }
             else
             {
-                consultation.AppointmentId = AppointmentId;
-                
                 // Load patient details
                 patient = await PatientApiClient.GetByIdAsync(appointment.PatientId);
                 if (patient == null)
@@ -238,7 +378,7 @@
 
     private async Task HandleSubmit()
     {
-        if (isSubmitting || appointment == null)
+        if (isSubmitting || appointment == null || editContext == null)
             return;
 
         try
@@ -246,50 +386,19 @@
             errorMessage = null;
             isSubmitting = true;
 
-            // Validate required fields
-            if (string.IsNullOrWhiteSpace(consultation.Complaints))
-            {
-                errorMessage = "Complaints are required.";
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(consultation.Diagnosis))
-            {
-                errorMessage = "Diagnosis is required.";
-                return;
-            }
-
-            if (consultation.Temperature <= 0)
-            {
-                errorMessage = "Please enter a valid temperature.";
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(consultation.BloodPressure))
-            {
-                errorMessage = "Blood pressure is required.";
-                return;
-            }
-
-            if (consultation.Pulse <= 0)
-            {
-                errorMessage = "Please enter a valid pulse rate.";
-                return;
-            }
-
             // Prepare consultation with non-empty medications
             var medicationsToSave = medications.Where(m => !string.IsNullOrWhiteSpace(m.Name)).ToList();
             
             if (medicationsToSave.Count == 0)
             {
-                errorMessage = "Please add at least one medication.";
+                errorMessage = "Please add at least one medication with a name.";
                 return;
             }
 
             // Create the consultation with medications
             var consultationPayload = new
             {
-                consultation.AppointmentId,
+                AppointmentId = AppointmentId,
                 consultation.Temperature,
                 consultation.BloodPressure,
                 consultation.Pulse,
@@ -343,6 +452,11 @@
         }
     }
 
+    private void HandleInvalidSubmit()
+    {
+        errorMessage = "Please fix the validation errors above before submitting.";
+    }
+
     private void AddMedication()
     {
         medications.Add(new MedicationCreateModel());
@@ -368,7 +482,6 @@
                     medication.Instructions = value;
                     break;
             }
-            // Force Blazor to recognize the change
             medications[index] = medication;
             StateHasChanged();
         }
@@ -397,24 +510,5 @@
     private void GoBack()
     {
         Navigation.NavigateTo("/appointments");
-    }
-
-    private class ConsultationCreateModel
-    {
-        public int AppointmentId { get; set; }
-        public decimal Temperature { get; set; }
-        public string BloodPressure { get; set; } = string.Empty;
-        public int Pulse { get; set; }
-        public string Complaints { get; set; } = string.Empty;
-        public string Diagnosis { get; set; } = string.Empty;
-    }
-
-    private class MedicationCreateModel
-    {
-        public string Name { get; set; } = string.Empty;
-        public string Dosage { get; set; } = string.Empty;
-        public string Frequency { get; set; } = string.Empty;
-        public int Duration { get; set; }
-        public string Instructions { get; set; } = string.Empty;
     }
 }

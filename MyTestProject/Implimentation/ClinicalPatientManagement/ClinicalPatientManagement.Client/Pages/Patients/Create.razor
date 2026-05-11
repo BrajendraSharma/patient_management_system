@@ -10,72 +10,130 @@
 <div class="container mt-5">
     <div class="row">
         <div class="col-md-6 offset-md-3">
-            <h2 class="mb-4">Create New Patient</h2>
+            <h2 class="mb-4">
+                <i class="bi bi-person-plus"></i> Create New Patient
+            </h2>
 
             @if (!string.IsNullOrEmpty(errorMessage))
             {
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    @errorMessage
+                    <i class="bi bi-exclamation-circle"></i> @errorMessage
                     <button type="button" class="btn-close" @onclick="() => errorMessage = string.Empty"></button>
                 </div>
             }
 
-            <div class="card">
+            <div class="card shadow-sm">
                 <div class="card-body">
-                    <EditForm Model="@newPatient" OnValidSubmit="@SavePatient">
+                    <EditForm Model="@newPatient" OnValidSubmit="@SavePatient" OnInvalidSubmit="@HandleInvalidSubmit">
                         <DataAnnotationsValidator />
-                        <ValidationSummary />
-
+                        
+                        <!-- Error Summary -->
                         <div class="mb-3">
-                            <label for="firstName" class="form-label">First Name *</label>
-                            <InputText id="firstName" class="form-control" @bind-value="newPatient.FirstName" placeholder="Enter first name" />
-                            <ValidationMessage For="@(() => newPatient.FirstName)" />
+                            <ValidationSummary class="alert alert-warning" />
                         </div>
 
+                        <!-- First Name -->
                         <div class="mb-3">
-                            <label for="lastName" class="form-label">Last Name *</label>
-                            <InputText id="lastName" class="form-control" @bind-value="newPatient.LastName" placeholder="Enter last name" />
-                            <ValidationMessage For="@(() => newPatient.LastName)" />
+                            <label for="firstName" class="form-label">
+                                First Name <span class="text-danger">*</span>
+                            </label>
+                            <InputText 
+                                id="firstName" 
+                                class="form-control form-control-lg" 
+                                @bind-value="newPatient.FirstName" 
+                                placeholder="Enter first name"
+                                aria-label="First Name" />
+                            <ValidationMessage For="@(() => newPatient.FirstName)" class="d-block text-danger small mt-1" />
                         </div>
 
+                        <!-- Last Name -->
                         <div class="mb-3">
-                            <label for="phone" class="form-label">Phone *</label>
-                            <InputText id="phone" class="form-control" @bind-value="newPatient.Phone" placeholder="Enter phone number" />
-                            <ValidationMessage For="@(() => newPatient.Phone)" />
+                            <label for="lastName" class="form-label">
+                                Last Name <span class="text-danger">*</span>
+                            </label>
+                            <InputText 
+                                id="lastName" 
+                                class="form-control form-control-lg" 
+                                @bind-value="newPatient.LastName" 
+                                placeholder="Enter last name"
+                                aria-label="Last Name" />
+                            <ValidationMessage For="@(() => newPatient.LastName)" class="d-block text-danger small mt-1" />
                         </div>
 
+                        <!-- Phone -->
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">
+                                Phone <span class="text-danger">*</span>
+                            </label>
+                            <InputText 
+                                id="phone" 
+                                class="form-control form-control-lg" 
+                                @bind-value="newPatient.Phone" 
+                                placeholder="Enter phone number (e.g., +1-234-567-8900)"
+                                aria-label="Phone Number" />
+                            <ValidationMessage For="@(() => newPatient.Phone)" class="d-block text-danger small mt-1" />
+                        </div>
+
+                        <!-- Email -->
                         <div class="mb-3">
                             <label for="email" class="form-label">Email</label>
-                            <InputText id="email" type="email" class="form-control" @bind-value="newPatient.Email" placeholder="Enter email address" />
-                            <ValidationMessage For="@(() => newPatient.Email)" />
+                            <InputText 
+                                id="email" 
+                                type="email" 
+                                class="form-control form-control-lg" 
+                                @bind-value="newPatient.Email" 
+                                placeholder="Enter email address (optional)"
+                                aria-label="Email Address" />
+                            <ValidationMessage For="@(() => newPatient.Email)" class="d-block text-danger small mt-1" />
                         </div>
 
+                        <!-- Date of Birth -->
                         <div class="mb-3">
-                            <label for="dob" class="form-label">Date of Birth *</label>
-                            <InputDate id="dob" class="form-control" @bind-value="newPatient.DateOfBirth" />
-                            <ValidationMessage For="@(() => newPatient.DateOfBirth)" />
+                            <label for="dob" class="form-label">
+                                Date of Birth <span class="text-danger">*</span>
+                            </label>
+                            <InputDate 
+                                id="dob" 
+                                class="form-control form-control-lg" 
+                                @bind-value="newPatient.DateOfBirth"
+                                aria-label="Date of Birth" />
+                            <ValidationMessage For="@(() => newPatient.DateOfBirth)" class="d-block text-danger small mt-1" />
                         </div>
 
-                        <div class="mb-3">
-                            <label for="gender" class="form-label">Gender *</label>
-                            <InputSelect id="gender" class="form-select" @bind-value="newPatient.Gender">
+                        <!-- Gender -->
+                        <div class="mb-4">
+                            <label for="gender" class="form-label">
+                                Gender <span class="text-danger">*</span>
+                            </label>
+                            <InputSelect 
+                                id="gender" 
+                                class="form-select form-select-lg" 
+                                @bind-value="newPatient.Gender"
+                                aria-label="Gender">
+                                <option value="">-- Select Gender --</option>
                                 <option value="Male">Male</option>
                                 <option value="Female">Female</option>
                                 <option value="Other">Other</option>
                             </InputSelect>
-                            <ValidationMessage For="@(() => newPatient.Gender)" />
+                            <ValidationMessage For="@(() => newPatient.Gender)" class="d-block text-danger small mt-1" />
                         </div>
 
+                        <!-- Buttons -->
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                            <a href="/patients" class="btn btn-secondary">
+                            <a href="/patients" class="btn btn-outline-secondary btn-lg">
                                 <i class="bi bi-x-circle"></i> Cancel
                             </a>
-                            <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                            <button type="submit" class="btn btn-primary btn-lg" disabled="@isSubmitting">
                                 @if (isSubmitting)
                                 {
                                     <span class="spinner-border spinner-border-sm me-2"></span>
+                                    <span>Saving...</span>
                                 }
-                                <i class="bi bi-check-circle"></i> Save Patient
+                                else
+                                {
+                                    <i class="bi bi-check-circle"></i> 
+                                    <span>Save Patient</span>
+                                }
                             </button>
                         </div>
                     </EditForm>
@@ -89,6 +147,12 @@
     private CreatePatientModel newPatient = new();
     private string errorMessage = string.Empty;
     private bool isSubmitting = false;
+    private EditContext? editContext;
+
+    protected override void OnInitialized()
+    {
+        editContext = new EditContext(newPatient);
+    }
 
     private async Task SavePatient()
     {
@@ -107,5 +171,10 @@
         {
             isSubmitting = false;
         }
+    }
+
+    private void HandleInvalidSubmit()
+    {
+        errorMessage = "Please fix the validation errors above before submitting.";
     }
 }

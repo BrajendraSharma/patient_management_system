@@ -2,9 +2,11 @@ using Serilog;
 using ClinicalPatientManagement.Api.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using ClinicalPatientManagement.Api.Models;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,6 +42,32 @@ try
     // Add application services and infrastructure
     builder.Services.AddApplicationServices(builder.Configuration);
     builder.Services.AddApiInfrastructure();
+
+    // Add Rate Limiting
+    builder.Services.AddRateLimiter(options =>
+    {
+        options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                partitionKey: context.User.Identity?.Name ?? context.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
+                factory: partition => new FixedWindowRateLimiterOptions
+                {
+                    AutoReplenishment = true,
+                    PermitLimit = 100,
+                    Window = TimeSpan.FromMinutes(1),
+                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                    QueueLimit = 0
+                }));
+
+        options.OnRejected = async (context, token) =>
+        {
+            context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+            context.HttpContext.Response.ContentType = "application/json";
+            await context.HttpContext.Response.WriteAsJsonAsync(
+                new { error = "Rate limit exceeded. Maximum 100 requests per minute." },
+                token);
+            Log.Warning("Rate limit exceeded for {ClientIp}", context.HttpContext.Connection.RemoteIpAddress);
+        };
+    });
 
     // Add JWT Authentication
     builder.Services.AddAuthentication(options =>
@@ -80,8 +108,8 @@ try
     // ✅ Redirect root URL to Swagger
     app.MapGet("/", () => Results.Redirect("/swagger"));
 
-
     app.UseHttpsRedirection();
+    app.UseRateLimiter();
     app.UseCors("AllowBlazor");
     app.UseAuthentication();
     app.UseAuthorization();

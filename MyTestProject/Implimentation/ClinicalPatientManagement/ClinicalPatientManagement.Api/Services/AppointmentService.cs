@@ -331,7 +331,7 @@ public class AppointmentService : IAppointmentService
     }
 
     /// <summary>
-    /// Validate appointment data
+    /// Validate appointment data with enhanced checks
     /// </summary>
     public bool ValidateAppointmentData(CreateAppointmentDto dto, out List<string> errors)
     {
@@ -343,21 +343,31 @@ public class AppointmentService : IAppointmentService
             return false;
         }
 
+        // Patient ID validation
         if (dto.PatientId <= 0)
             errors.Add("Patient ID must be greater than 0");
 
+        // Appointment date validation
         if (dto.AppointmentDate == default)
             errors.Add("Appointment date is required");
-
-        if (dto.AppointmentDate < DateTime.UtcNow)
+        else if (dto.AppointmentDate < DateTime.UtcNow)
             errors.Add("Appointment date cannot be in the past");
+        else if (dto.AppointmentDate > DateTime.UtcNow.AddYears(1))
+            errors.Add("Appointment cannot be scheduled more than 1 year in advance");
 
+        // Status validation
         if (string.IsNullOrWhiteSpace(dto.Status))
             errors.Add("Status is required");
+        else
+        {
+            var validStatuses = new[] { "Scheduled", "Completed", "Cancelled", "No-Show" };
+            if (!validStatuses.Contains(dto.Status))
+                errors.Add($"Status must be one of: {string.Join(", ", validStatuses)}");
+        }
 
-        var validStatuses = new[] { "Scheduled", "Completed", "Cancelled", "No-Show" };
-        if (!validStatuses.Contains(dto.Status))
-            errors.Add($"Status must be one of: {string.Join(", ", validStatuses)}");
+        // Notes validation (optional)
+        if (!string.IsNullOrEmpty(dto.Notes) && dto.Notes.Length > 1000)
+            errors.Add("Notes cannot exceed 1000 characters");
 
         return errors.Count == 0;
     }

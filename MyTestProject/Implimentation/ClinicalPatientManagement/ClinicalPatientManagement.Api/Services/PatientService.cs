@@ -79,6 +79,16 @@ public class PatientService : IPatientService
                 throw new InvalidOperationException($"Patient validation failed: {errorMsg}");
             }
 
+            // Check for duplicate phone number
+            var existingPatientWithPhone = await _repository.GetAll()
+                .FirstOrDefaultAsync(p => p.Phone == createDto.Phone, cancellationToken);
+            
+            if (existingPatientWithPhone != null)
+            {
+                _logger.Warning("Attempt to create patient with duplicate phone: {Phone}", createDto.Phone);
+                throw new InvalidOperationException($"A patient with phone number {createDto.Phone} already exists");
+            }
+
             var patient = _mapper.Map<Patient>(createDto);
             var createdPatient = await _repository.AddAsync(patient, cancellationToken);
 
@@ -187,39 +197,74 @@ public class PatientService : IPatientService
     }
 
     /// <summary>
-    /// Validate patient data
+    /// Validate patient data with enhanced checks
     /// </summary>
     public bool ValidatePatientData(CreatePatientDto dto, out List<string> errors)
     {
         errors = new List<string>();
 
+        // First name validation
         if (string.IsNullOrWhiteSpace(dto.FirstName))
             errors.Add("First name is required");
+        else if (dto.FirstName.Length < 2)
+            errors.Add("First name must be at least 2 characters");
         else if (dto.FirstName.Length > 100)
             errors.Add("First name cannot exceed 100 characters");
+        else if (!dto.FirstName.All(c => char.IsLetter(c) || char.IsWhiteSpace(c)))
+            errors.Add("First name can only contain letters and spaces");
 
+        // Last name validation
         if (string.IsNullOrWhiteSpace(dto.LastName))
             errors.Add("Last name is required");
+        else if (dto.LastName.Length < 2)
+            errors.Add("Last name must be at least 2 characters");
         else if (dto.LastName.Length > 100)
             errors.Add("Last name cannot exceed 100 characters");
+        else if (!dto.LastName.All(c => char.IsLetter(c) || char.IsWhiteSpace(c)))
+            errors.Add("Last name can only contain letters and spaces");
 
+        // Phone validation
         if (string.IsNullOrWhiteSpace(dto.Phone))
             errors.Add("Phone is required");
+        else if (dto.Phone.Length < 7)
+            errors.Add("Phone number must be at least 7 characters");
         else if (dto.Phone.Length > 20)
             errors.Add("Phone cannot exceed 20 characters");
+        else if (!IsValidPhone(dto.Phone))
+            errors.Add("Phone number contains invalid characters (only digits, +, -, (), and spaces allowed)");
 
-        if (!string.IsNullOrEmpty(dto.Email) && !IsValidEmail(dto.Email))
-            errors.Add("Email format is invalid");
-        else if (dto.Email?.Length > 255)
-            errors.Add("Email cannot exceed 255 characters");
+        // Email validation (optional but must be valid if provided)
+        if (!string.IsNullOrEmpty(dto.Email))
+        {
+            if (dto.Email.Length > 255)
+                errors.Add("Email cannot exceed 255 characters");
+            else if (!IsValidEmail(dto.Email))
+                errors.Add("Email format is invalid");
+        }
 
-        if (dto.DateOfBirth >= DateTime.Now.AddYears(-5))
+        // Date of birth validation
+        if (dto.DateOfBirth == default(DateTime))
+            errors.Add("Date of birth is required");
+        else if (dto.DateOfBirth > DateTime.Now.AddDays(-1))
+            errors.Add("Date of birth cannot be in the future");
+        else if (DateTime.Now.AddYears(-5) < dto.DateOfBirth)
             errors.Add("Patient must be at least 5 years old");
+        else if (DateTime.Now.AddYears(-150) > dto.DateOfBirth)
+            errors.Add("Date of birth seems unrealistic");
 
-        if (string.IsNullOrWhiteSpace(dto.Gender) || !IsValidGender(dto.Gender))
+        // Gender validation
+        if (string.IsNullOrWhiteSpace(dto.Gender))
+            errors.Add("Gender is required");
+        else if (!IsValidGender(dto.Gender))
             errors.Add("Gender must be Male, Female, or Other");
 
         return errors.Count == 0;
+    }
+
+    private static bool IsValidPhone(string phone)
+    {
+        // Allow digits, +, -, (), and spaces
+        return phone.All(c => char.IsDigit(c) || c == '+' || c == '-' || c == '(' || c == ')' || c == ' ');
     }
 
     private static bool IsValidEmail(string email)
