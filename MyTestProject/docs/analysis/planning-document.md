@@ -297,11 +297,36 @@ This planning document outlines the implementation of a web-based clinical patie
     **Requirement Reference(s)**: Approved Assumption - Usability (30-minute training).
 
 17. **Step Name**: Set up DevOps  
-    **Objective**: Configure CI/CD for deployment.  
-    **Inputs**: Complete codebase.  
-    **Expected Outputs**: Azure Pipelines YAML, deployment scripts.  
-    **Verification Method**: Trigger pipeline, deploy to staging.  
-    **Requirement Reference(s)**: Deployment & Monitoring.
+    **Objective**: Configure CI/CD for deployment using GitHub Actions and free-tier cloud services.  
+    **Inputs**: Complete codebase from Steps 1-16.  
+    **Expected Outputs**: 
+    - GitHub Actions workflows (build-and-test.yml, deploy-free-tier.yml)
+    - Deployment scripts for Render, Railway, Fly.io
+    - DevOps guide with setup instructions
+    - PowerShell deployment automation script
+    - CI/CD pipeline documentation
+    
+    **Verification Method**: 
+    - Trigger GitHub Actions workflow on git push
+    - Verify build and test automation
+    - Deploy to free-tier staging environment (Render.com recommended)
+    - Verify application is accessible via HTTPS
+    - Verify auto-deployment on code changes
+    
+    **Deliverables**:
+    - `.github/workflows/build-and-test.yml` - Automated CI/CD with xUnit tests and code coverage
+    - `.github/workflows/deploy-free-tier.yml` - Deployment pipeline for free-tier services
+    - `docs/completion-reports/STEP17_DEVOPS_GUIDE.md` - Comprehensive DevOps documentation
+    - `scripts/deploy-render.md` - Render.com step-by-step deployment guide
+    - `scripts/deploy.ps1` - PowerShell deployment automation for all platforms
+    
+    **Technology Stack**:
+    - **CI/CD**: GitHub Actions (free for public repositories)
+    - **Supported Platforms**: Render.com, Railway.app, Fly.io, GitHub Codespaces
+    - **Database**: PostgreSQL (free tier) or managed SQL
+    - **Cost**: $0/month with free-tier services
+    
+    **Requirement Reference(s)**: Deployment & Monitoring; DevOps automation; CI/CD pipeline; free-tier hosting.
 
 18. **Step Name**: Validate production readiness  
     **Objective**: Test backups, recovery, and performance.  
