@@ -1,5 +1,6 @@
 using Serilog;
 using ClinicalPatientManagement.Api.Extensions;
+using ClinicalPatientManagement.Api.Configuration;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
@@ -28,20 +29,29 @@ try
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
 
-    // Configure CORS for Blazor client
+    // Phase 1.1: Fix CORS Configuration - Use whitelisted origins from appsettings
+    var corsOrigins = builder.Configuration.GetSection("CorsOrigins").Get<string[]>() ?? new[] { "http://localhost:3000" };
+    
     builder.Services.AddCors(options =>
     {
-        options.AddPolicy("AllowBlazor", policy =>
+        options.AddPolicy("AllowClientsOnly", policy =>
         {
-            policy.AllowAnyOrigin()
+            policy.WithOrigins(corsOrigins)
                   .AllowAnyMethod()
-                  .AllowAnyHeader();
+                  .AllowAnyHeader()
+                  .AllowCredentials();
+            
+            Log.Information("CORS configured with allowed origins: {Origins}", string.Join(", ", corsOrigins));
         });
     });
 
     // Add application services and infrastructure
     builder.Services.AddApplicationServices(builder.Configuration);
     builder.Services.AddApiInfrastructure();
+
+    // Phase 1.3: Add JWT Key Provider for secure key management
+    builder.Services.AddScoped<IJwtKeyProvider, JwtKeyProvider>();
+    Log.Information("JWT Key Provider registered");
 
     // Add Rate Limiting
     builder.Services.AddRateLimiter(options =>
@@ -69,7 +79,7 @@ try
         };
     });
 
-    // Add JWT Authentication
+    // Phase 1.3: Add JWT Authentication with secure key provider
     builder.Services.AddAuthentication(options =>
     {
         options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -77,6 +87,11 @@ try
     })
     .AddJwtBearer(options =>
     {
+        // Get JWT key from secure provider
+        using var scope = builder.Services.BuildServiceProvider().CreateScope();
+        var keyProvider = scope.ServiceProvider.GetRequiredService<IJwtKeyProvider>();
+        var signingKey = keyProvider.GetSigningKey();
+
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -85,7 +100,7 @@ try
             ValidateIssuerSigningKey = true,
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+            IssuerSigningKey = signingKey
         };
     });
 
@@ -110,16 +125,16 @@ try
 
     app.UseHttpsRedirection();
     app.UseRateLimiter();
-    app.UseCors("AllowBlazor");
+    app.UseCors("AllowClientsOnly");
     app.UseAuthentication();
     app.UseAuthorization();
     app.MapControllers();
 
-    // Seed default user
+    // Phase 1.2: Seed default user only in development with environment-specific credentials
     using (var scope = app.Services.CreateScope())
     {
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-        await SeedDefaultUser(userManager);
+        await SeedDefaultUser(userManager, builder.Environment);
     }
 
     Log.Information("Clinical Patient Management API configured successfully");
@@ -134,15 +149,30 @@ finally
     Log.CloseAndFlush();
 }
 
-static async Task SeedDefaultUser(UserManager<ApplicationUser> userManager)
+/// <summary>
+/// Phase 1.2: Seeds default user only in development environment.
+/// In production, users must be created through proper admin interfaces.
+/// </summary>
+static async Task SeedDefaultUser(UserManager<ApplicationUser> userManager, IWebHostEnvironment environment)
 {
-    const string defaultUsername = "doctor";
-    const string defaultPassword = "Password123!";
+    // Only seed in development environment
+    if (!environment.IsDevelopment())
+    {
+        Log.Information("Skipping default user seeding in {Environment} environment", environment.EnvironmentName);
+        return;
+    }
 
+    const string defaultUsername = "doctor";
+    
     var user = await userManager.FindByNameAsync(defaultUsername);
     if (user == null)
     {
-        user = new ApplicationUser { UserName = defaultUsername, Email = "doctor@clinic.com" };
+        // In development, read from environment or configuration
+        // This prevents hardcoded credentials in source code
+        var defaultPassword = Environment.GetEnvironmentVariable("DEFAULT_USER_PASSWORD") ?? "DevPassword123!";
+        var defaultEmail = Environment.GetEnvironmentVariable("DEFAULT_USER_EMAIL") ?? "doctor@clinic.local";
+
+        user = new ApplicationUser { UserName = defaultUsername, Email = defaultEmail };
         var result = await userManager.CreateAsync(user, defaultPassword);
         if (!result.Succeeded)
         {
@@ -150,7 +180,11 @@ static async Task SeedDefaultUser(UserManager<ApplicationUser> userManager)
         }
         else
         {
-            Log.Information("Default user created successfully");
+            Log.Information("Default development user created successfully");
         }
+    }
+    else
+    {
+        Log.Information("Default user already exists, skipping creation");
     }
 }
