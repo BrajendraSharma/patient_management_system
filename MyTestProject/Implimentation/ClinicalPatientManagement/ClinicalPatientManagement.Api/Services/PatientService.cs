@@ -12,30 +12,49 @@ namespace ClinicalPatientManagement.Api.Services;
 /// Service implementation for patient management operations
 /// Step 6: Patient Management - Business Logic Layer with AutoMapper
 /// Phase 2: Updated to use IUnitOfWork pattern for transaction management
+/// Phase 3: Caching support for read-heavy operations
 /// </summary>
 public class PatientService : IPatientService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly ILogger _logger;
+    private readonly ICacheService _cacheService;
 
-    public PatientService(IUnitOfWork unitOfWork, IMapper mapper)
+    public PatientService(IUnitOfWork unitOfWork, IMapper mapper, ICacheService cacheService)
     {
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+        _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
         _logger = Log.ForContext<PatientService>();
     }
 
     /// <summary>
-    /// Get all patients
+    /// Get all patients with caching support (5-minute TTL)
+    /// Phase 3: Performance Optimization - Caching for read-heavy operations
     /// </summary>
     public async Task<IEnumerable<PatientDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         try
         {
-            _logger.Information("Fetching all patients");
-            var patients = await _unitOfWork.Patients.GetAll().ToListAsync();
-            return _mapper.Map<IEnumerable<PatientDto>>(patients);
+            var cacheKey = CacheKeys.AllPatients;
+            
+            // Try to get from cache
+            var cachedPatients = await _cacheService.GetAsync<IEnumerable<PatientDto>>(cacheKey, cancellationToken);
+            if (cachedPatients != null)
+            {
+                _logger.Information("Retrieved patients from cache");
+                return cachedPatients;
+            }
+
+            _logger.Information("Fetching all patients from database");
+            var patients = await _unitOfWork.Patients.GetAll().ToListAsync(cancellationToken);
+            var patientDtos = _mapper.Map<IEnumerable<PatientDto>>(patients);
+            
+            // Cache for 5 minutes
+            await _cacheService.SetAsync(cacheKey, patientDtos, TimeSpan.FromMinutes(5), cancellationToken);
+            
+            return patientDtos;
         }
         catch (Exception ex)
         {
@@ -45,15 +64,34 @@ public class PatientService : IPatientService
     }
 
     /// <summary>
-    /// Get patient by ID
+    /// Get patient by ID with caching support (5-minute TTL)
+    /// Phase 3: Performance Optimization - Caching for read-heavy operations
     /// </summary>
     public async Task<PatientDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         try
         {
-            _logger.Information("Fetching patient with ID {PatientId}", id);
+            var cacheKey = CacheKeys.Patient(id);
+            
+            // Try to get from cache
+            var cachedPatient = await _cacheService.GetAsync<PatientDto>(cacheKey, cancellationToken);
+            if (cachedPatient != null)
+            {
+                _logger.Information("Retrieved patient {PatientId} from cache", id);
+                return cachedPatient;
+            }
+
+            _logger.Information("Fetching patient with ID {PatientId} from database", id);
             var patient = await _unitOfWork.Patients.GetByIdAsync(id, cancellationToken);
-            return patient == null ? null : _mapper.Map<PatientDto>(patient);
+            if (patient == null)
+                return null;
+
+            var patientDto = _mapper.Map<PatientDto>(patient);
+            
+            // Cache for 5 minutes
+            await _cacheService.SetAsync(cacheKey, patientDto, TimeSpan.FromMinutes(5), cancellationToken);
+            
+            return patientDto;
         }
         catch (Exception ex)
         {
@@ -96,6 +134,9 @@ public class PatientService : IPatientService
             
             // Persist changes through UnitOfWork
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            // Phase 3: Invalidate cache on create
+            await _cacheService.RemoveAsync(CacheKeys.AllPatients, cancellationToken);
 
             _logger.Information("Patient created successfully with ID {PatientId}", createdPatient.Id);
             return _mapper.Map<PatientDto>(createdPatient);
@@ -144,6 +185,10 @@ public class PatientService : IPatientService
             // Persist changes through UnitOfWork
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
+            // Phase 3: Invalidate cache on update
+            await _cacheService.RemoveAsync(CacheKeys.AllPatients, cancellationToken);
+            await _cacheService.RemoveAsync(CacheKeys.Patient(id), cancellationToken);
+
             _logger.Information("Patient with ID {PatientId} updated successfully", id);
             return _mapper.Map<PatientDto>(updatedPatient);
         }
@@ -157,6 +202,7 @@ public class PatientService : IPatientService
     /// <summary>
     /// Delete patient by ID
     /// Phase 2: Uses UnitOfWork to persist changes (ensures ACID compliance)
+    /// Phase 3: Invalidates cache on delete
     /// </summary>
     public async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
@@ -167,6 +213,11 @@ public class PatientService : IPatientService
             {
                 // Persist changes through UnitOfWork
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
+                
+                // Phase 3: Invalidate cache on delete
+                await _cacheService.RemoveAsync(CacheKeys.AllPatients, cancellationToken);
+                await _cacheService.RemoveAsync(CacheKeys.Patient(id), cancellationToken);
+
                 _logger.Information("Patient with ID {PatientId} deleted successfully", id);
             }
             else

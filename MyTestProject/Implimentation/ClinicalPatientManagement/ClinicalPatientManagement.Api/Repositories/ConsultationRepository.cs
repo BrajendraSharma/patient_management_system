@@ -18,22 +18,26 @@ public class ConsultationRepository : IConsultationRepository
     }
 
     /// <summary>
-    /// Get all consultations ordered by date (recent first)
+    /// Get all consultations ordered by date with eager-loaded navigations (prevents N+1 queries)
+    /// Phase 3: Performance Optimization - N+1 Query Fix
     /// </summary>
     public IQueryable<Consultation> GetAll()
     {
         return _context.Consultations
             .Include(c => c.Appointment)
+                .ThenInclude(a => a.Patient)
             .OrderByDescending(c => c.CreatedAt);
     }
 
     /// <summary>
-    /// Get consultation by ID
+    /// Get consultation by ID with eager-loaded navigations (prevents N+1 queries)
+    /// Phase 3: Performance Optimization - N+1 Query Fix
     /// </summary>
     public async Task<Consultation?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         return await _context.Consultations
             .Include(c => c.Appointment)
+                .ThenInclude(a => a.Patient)
             .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
     }
 

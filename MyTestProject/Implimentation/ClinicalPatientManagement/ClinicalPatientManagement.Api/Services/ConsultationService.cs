@@ -13,6 +13,7 @@ namespace ClinicalPatientManagement.Api.Services;
 /// Step 9: Implement Consultation Creation - Business Logic Layer with AutoMapper
 /// Step 11: Persist consultations with transactions - ACID compliance
 /// Phase 2: Updated to use IUnitOfWork pattern consistently
+/// Phase 3: Caching support for read-heavy operations
 /// </summary>
 public class ConsultationService : IConsultationService
 {
@@ -20,28 +21,47 @@ public class ConsultationService : IConsultationService
     private readonly IPrescriptionService _prescriptionService;
     private readonly IMapper _mapper;
     private readonly ILogger _logger;
+    private readonly ICacheService _cacheService;
 
     public ConsultationService(
         IUnitOfWork unitOfWork,
         IPrescriptionService prescriptionService,
-        IMapper mapper)
+        IMapper mapper,
+        ICacheService cacheService)
     {
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _prescriptionService = prescriptionService ?? throw new ArgumentNullException(nameof(prescriptionService));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+        _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
         _logger = Log.ForContext<ConsultationService>();
     }
 
     /// <summary>
-    /// Get all consultations
+    /// Get all consultations with caching support (5-minute TTL)
+    /// Phase 3: Performance Optimization - Caching for read-heavy operations
     /// </summary>
     public async Task<IEnumerable<ConsultationDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         try
         {
-            _logger.Information("Fetching all consultations");
+            var cacheKey = CacheKeys.AllConsultations;
+            
+            // Try to get from cache
+            var cachedConsultations = await _cacheService.GetAsync<IEnumerable<ConsultationDto>>(cacheKey, cancellationToken);
+            if (cachedConsultations != null)
+            {
+                _logger.Information("Retrieved consultations from cache");
+                return cachedConsultations;
+            }
+
+            _logger.Information("Fetching all consultations from database");
             var consultations = await _unitOfWork.Consultations.GetAll().ToListAsync(cancellationToken);
-            return _mapper.Map<IEnumerable<ConsultationDto>>(consultations);
+            var consultationDtos = _mapper.Map<IEnumerable<ConsultationDto>>(consultations);
+            
+            // Cache for 5 minutes
+            await _cacheService.SetAsync(cacheKey, consultationDtos, TimeSpan.FromMinutes(5), cancellationToken);
+            
+            return consultationDtos;
         }
         catch (Exception ex)
         {
@@ -51,15 +71,34 @@ public class ConsultationService : IConsultationService
     }
 
     /// <summary>
-    /// Get consultation by ID
+    /// Get consultation by ID with caching support (5-minute TTL)
+    /// Phase 3: Performance Optimization - Caching for read-heavy operations
     /// </summary>
     public async Task<ConsultationDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         try
         {
-            _logger.Information("Fetching consultation with ID {ConsultationId}", id);
+            var cacheKey = CacheKeys.Consultation(id);
+            
+            // Try to get from cache
+            var cachedConsultation = await _cacheService.GetAsync<ConsultationDto>(cacheKey, cancellationToken);
+            if (cachedConsultation != null)
+            {
+                _logger.Information("Retrieved consultation {ConsultationId} from cache", id);
+                return cachedConsultation;
+            }
+
+            _logger.Information("Fetching consultation with ID {ConsultationId} from database", id);
             var consultation = await _unitOfWork.Consultations.GetByIdAsync(id, cancellationToken);
-            return consultation == null ? null : _mapper.Map<ConsultationDto>(consultation);
+            if (consultation == null)
+                return null;
+
+            var consultationDto = _mapper.Map<ConsultationDto>(consultation);
+            
+            // Cache for 5 minutes
+            await _cacheService.SetAsync(cacheKey, consultationDto, TimeSpan.FromMinutes(5), cancellationToken);
+            
+            return consultationDto;
         }
         catch (Exception ex)
         {
@@ -108,6 +147,9 @@ public class ConsultationService : IConsultationService
             
             // Persist changes through UnitOfWork
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            // Phase 3: Invalidate cache on create
+            await _cacheService.RemoveAsync(CacheKeys.AllConsultations, cancellationToken);
 
             _logger.Information("Consultation created successfully with ID {ConsultationId} for appointment {AppointmentId}", 
                 createdConsultation.Id, createdConsultation.AppointmentId);
@@ -172,6 +214,10 @@ public class ConsultationService : IConsultationService
             // Persist changes through UnitOfWork
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
+            // Phase 3: Invalidate cache on update
+            await _cacheService.RemoveAsync(CacheKeys.AllConsultations, cancellationToken);
+            await _cacheService.RemoveAsync(CacheKeys.Consultation(id), cancellationToken);
+
             _logger.Information("Consultation with ID {ConsultationId} updated successfully", id);
             return _mapper.Map<ConsultationDto>(updatedConsultation);
         }
@@ -185,6 +231,7 @@ public class ConsultationService : IConsultationService
     /// <summary>
     /// Delete consultation by ID
     /// Phase 2: Uses UnitOfWork to persist changes (ensures ACID compliance)
+    /// Phase 3: Invalidates cache on delete
     /// </summary>
     public async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
@@ -195,6 +242,11 @@ public class ConsultationService : IConsultationService
             {
                 // Persist changes through UnitOfWork
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+                // Phase 3: Invalidate cache on delete
+                await _cacheService.RemoveAsync(CacheKeys.AllConsultations, cancellationToken);
+                await _cacheService.RemoveAsync(CacheKeys.Consultation(id), cancellationToken);
+
                 _logger.Information("Consultation with ID {ConsultationId} deleted successfully", id);
             }
             else

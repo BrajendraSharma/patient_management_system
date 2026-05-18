@@ -18,21 +18,25 @@ public class PatientRepository : IPatientRepository
     }
 
     /// <summary>
-    /// Get all patients with sorted order
+    /// Get all patients with sorted order and eager-loaded appointments (prevents N+1 queries)
+    /// Phase 3: Performance Optimization - N+1 Query Fix
     /// </summary>
     public IQueryable<Patient> GetAll()
     {
         return _context.Patients
+            .Include(p => p.Appointments)
             .OrderBy(p => p.FirstName)
             .ThenBy(p => p.LastName);
     }
 
     /// <summary>
-    /// Get patient by ID
+    /// Get patient by ID with eager-loaded appointments (prevents N+1 queries)
+    /// Phase 3: Performance Optimization - N+1 Query Fix
     /// </summary>
     public async Task<Patient?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         return await _context.Patients
+            .Include(p => p.Appointments)
             .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
     }
 

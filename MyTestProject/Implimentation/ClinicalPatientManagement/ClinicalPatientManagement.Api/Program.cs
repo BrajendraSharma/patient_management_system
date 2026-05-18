@@ -11,6 +11,7 @@ using System.Text;
 using ClinicalPatientManagement.Api.Models;
 using System.Threading.RateLimiting;
 using Asp.Versioning;
+using Microsoft.Extensions.Caching.StackExchangeRedis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -61,6 +62,15 @@ try
     // Add application services and infrastructure
     builder.Services.AddApplicationServices(builder.Configuration);
     builder.Services.AddApiInfrastructure();
+
+    // Phase 3: Add Redis distributed cache and caching service for performance optimization
+    var redisConnection = builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379";
+    builder.Services.AddStackExchangeRedisCache(options =>
+    {
+        options.Configuration = redisConnection;
+    });
+    builder.Services.AddSingleton<ICacheService, RedisCacheService>();
+    Log.Information("Redis distributed cache and ICacheService registered");
 
     // Phase 1.3: Add JWT Key Provider for secure key management
     builder.Services.AddScoped<IJwtKeyProvider, JwtKeyProvider>();

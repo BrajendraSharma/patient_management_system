@@ -19,6 +19,7 @@ public class PatientServiceTests
     private readonly Mock<IPatientRepository> _repositoryMock;
     private readonly Mock<IUnitOfWork> _mockUnitOfWork;
     private readonly Mock<IMapper> _mapperMock;
+    private readonly Mock<ICacheService> _cacheServiceMock;
     private readonly PatientService _service;
 
     public PatientServiceTests()
@@ -26,11 +27,14 @@ public class PatientServiceTests
         _repositoryMock = new Mock<IPatientRepository>();
         _mockUnitOfWork = new Mock<IUnitOfWork>();
         _mapperMock = new Mock<IMapper>();
+        _cacheServiceMock = new Mock<ICacheService>();
         
         // Setup UnitOfWork to return the repository mock
         _mockUnitOfWork.Setup(u => u.Patients).Returns(_repositoryMock.Object);
         
-        _service = new PatientService(_mockUnitOfWork.Object, _mapperMock.Object);
+        // Cache service defaults to null returns for cache misses
+        
+        _service = new PatientService(_mockUnitOfWork.Object, _mapperMock.Object, _cacheServiceMock.Object);
     }
 
     #region GetAllAsync Tests
@@ -46,26 +50,20 @@ public class PatientServiceTests
         };
         var patientDtos = patients.Select(p => new PatientDto { Id = p.Id, FirstName = p.FirstName, LastName = p.LastName }).ToList();
 
-        // For async queryable support, we use a synchronous list and convert it
-        // This is a limitation of mocking async operations - in real integration tests, EF Core provides async support
-        var mockQueryable = patients.AsQueryable();
-        _repositoryMock.Setup(r => r.GetAll()).Returns(mockQueryable);
+        // Setup cache to return null (cache miss)
+        _cacheServiceMock.Setup(c => c.GetAsync<IEnumerable<PatientDto>>(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync((IEnumerable<PatientDto>)null);
+
+        // Setup repository to return patients
+        var asyncPatients = patients.AsAsyncQueryable();
+        _repositoryMock.Setup(r => r.GetAll()).Returns(asyncPatients);
         _mapperMock.Setup(m => m.Map<IEnumerable<PatientDto>>(It.IsAny<List<Patient>>())).Returns(patientDtos);
 
         // Act
-        try
-        {
-            var result = await _service.GetAllAsync();
-            
-            // Assert
-            Assert.NotNull(result);
-            Assert.Equal(2, result.Count());
-        }
-        catch (InvalidOperationException ex) when (ex.Message.Contains("IAsyncEnumerable"))
-        {
-            // Expected for non-EF Core queryables - integration tests will verify actual async behavior
-            Assert.True(true, "Mock limitation for async queryables - verify with integration testing");
-        }
+        var result = await _service.GetAllAsync();
+        
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(2, result.Count());
     }
 
     #endregion

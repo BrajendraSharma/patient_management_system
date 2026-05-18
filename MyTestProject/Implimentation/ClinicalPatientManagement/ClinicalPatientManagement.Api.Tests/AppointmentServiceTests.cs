@@ -69,6 +69,7 @@ public class AppointmentServiceTests
     private readonly Mock<IPatientRepository> _mockPatientRepository;
     private readonly Mock<IUnitOfWork> _mockUnitOfWork;
     private readonly Mock<IMapper> _mockMapper;
+    private readonly Mock<ICacheService> _cacheServiceMock;
     private readonly AppointmentService _appointmentService;
 
     public AppointmentServiceTests()
@@ -77,14 +78,18 @@ public class AppointmentServiceTests
         _mockPatientRepository = new Mock<IPatientRepository>();
         _mockUnitOfWork = new Mock<IUnitOfWork>();
         _mockMapper = new Mock<IMapper>();
+        _cacheServiceMock = new Mock<ICacheService>();
         
         // Setup UnitOfWork to return the repository mocks
         _mockUnitOfWork.Setup(u => u.Appointments).Returns(_mockAppointmentRepository.Object);
         _mockUnitOfWork.Setup(u => u.Patients).Returns(_mockPatientRepository.Object);
         
+        // Cache service defaults to null returns for cache misses
+        
         _appointmentService = new AppointmentService(
             _mockUnitOfWork.Object,
-            _mockMapper.Object
+            _mockMapper.Object,
+            _cacheServiceMock.Object
         );
     }
 

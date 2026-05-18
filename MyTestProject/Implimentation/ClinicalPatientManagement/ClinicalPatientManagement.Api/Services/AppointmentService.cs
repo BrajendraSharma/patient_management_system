@@ -12,30 +12,49 @@ namespace ClinicalPatientManagement.Api.Services;
 /// Service implementation for appointment management operations
 /// Step 7: Appointment Scheduling - Business Logic Layer with AutoMapper
 /// Phase 2: Updated to use IUnitOfWork pattern for transaction management
+/// Phase 3: Caching support for read-heavy operations
 /// </summary>
 public class AppointmentService : IAppointmentService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly ILogger _logger;
+    private readonly ICacheService _cacheService;
 
-    public AppointmentService(IUnitOfWork unitOfWork, IMapper mapper)
+    public AppointmentService(IUnitOfWork unitOfWork, IMapper mapper, ICacheService cacheService)
     {
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+        _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
         _logger = Log.ForContext<AppointmentService>();
     }
 
     /// <summary>
-    /// Get all appointments
+    /// Get all appointments with caching support (5-minute TTL)
+    /// Phase 3: Performance Optimization - Caching for read-heavy operations
     /// </summary>
     public async Task<IEnumerable<AppointmentDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         try
         {
-            _logger.Information("Fetching all appointments");
+            var cacheKey = CacheKeys.AllAppointments;
+            
+            // Try to get from cache
+            var cachedAppointments = await _cacheService.GetAsync<IEnumerable<AppointmentDto>>(cacheKey, cancellationToken);
+            if (cachedAppointments != null)
+            {
+                _logger.Information("Retrieved appointments from cache");
+                return cachedAppointments;
+            }
+
+            _logger.Information("Fetching all appointments from database");
             var appointments = await _unitOfWork.Appointments.GetAll().ToListAsync(cancellationToken);
-            return _mapper.Map<IEnumerable<AppointmentDto>>(appointments);
+            var appointmentDtos = _mapper.Map<IEnumerable<AppointmentDto>>(appointments);
+            
+            // Cache for 5 minutes
+            await _cacheService.SetAsync(cacheKey, appointmentDtos, TimeSpan.FromMinutes(5), cancellationToken);
+            
+            return appointmentDtos;
         }
         catch (Exception ex)
         {
@@ -45,15 +64,34 @@ public class AppointmentService : IAppointmentService
     }
 
     /// <summary>
-    /// Get appointment by ID
+    /// Get appointment by ID with caching support (5-minute TTL)
+    /// Phase 3: Performance Optimization - Caching for read-heavy operations
     /// </summary>
     public async Task<AppointmentDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         try
         {
-            _logger.Information("Fetching appointment with ID {AppointmentId}", id);
+            var cacheKey = CacheKeys.Appointment(id);
+            
+            // Try to get from cache
+            var cachedAppointment = await _cacheService.GetAsync<AppointmentDto>(cacheKey, cancellationToken);
+            if (cachedAppointment != null)
+            {
+                _logger.Information("Retrieved appointment {AppointmentId} from cache", id);
+                return cachedAppointment;
+            }
+
+            _logger.Information("Fetching appointment with ID {AppointmentId} from database", id);
             var appointment = await _unitOfWork.Appointments.GetByIdAsync(id, cancellationToken);
-            return appointment == null ? null : _mapper.Map<AppointmentDto>(appointment);
+            if (appointment == null)
+                return null;
+
+            var appointmentDto = _mapper.Map<AppointmentDto>(appointment);
+            
+            // Cache for 5 minutes
+            await _cacheService.SetAsync(cacheKey, appointmentDto, TimeSpan.FromMinutes(5), cancellationToken);
+            
+            return appointmentDto;
         }
         catch (Exception ex)
         {
@@ -102,6 +140,9 @@ public class AppointmentService : IAppointmentService
             
             // Persist changes through UnitOfWork
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            // Phase 3: Invalidate cache on create
+            await _cacheService.RemoveAsync(CacheKeys.AllAppointments, cancellationToken);
 
             _logger.Information("Appointment created successfully with ID {AppointmentId} for patient {PatientId}", createdAppointment.Id, createDto.PatientId);
             return _mapper.Map<AppointmentDto>(createdAppointment);
@@ -167,6 +208,10 @@ public class AppointmentService : IAppointmentService
             
             // Persist changes through UnitOfWork
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            // Phase 3: Invalidate cache on update
+            await _cacheService.RemoveAsync(CacheKeys.AllAppointments, cancellationToken);
+            await _cacheService.RemoveAsync(CacheKeys.Appointment(id), cancellationToken);
             
             _logger.Information("Appointment {AppointmentId} updated successfully", id);
             return _mapper.Map<AppointmentDto>(updatedAppointment);
@@ -181,6 +226,7 @@ public class AppointmentService : IAppointmentService
     /// <summary>
     /// Delete appointment by ID
     /// Phase 2: Uses UnitOfWork to persist changes (ensures ACID compliance)
+    /// Phase 3: Invalidates cache on delete
     /// </summary>
     public async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
@@ -192,6 +238,11 @@ public class AppointmentService : IAppointmentService
             {
                 // Persist changes through UnitOfWork
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+                // Phase 3: Invalidate cache on delete
+                await _cacheService.RemoveAsync(CacheKeys.AllAppointments, cancellationToken);
+                await _cacheService.RemoveAsync(CacheKeys.Appointment(id), cancellationToken);
+
                 _logger.Information("Appointment {AppointmentId} deleted successfully", id);
             }
             else

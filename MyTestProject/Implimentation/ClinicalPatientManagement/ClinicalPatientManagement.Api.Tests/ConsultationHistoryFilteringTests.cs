@@ -19,6 +19,7 @@ public class ConsultationHistoryFilteringTests
     private readonly Mock<IPrescriptionService> _prescriptionServiceMock;
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly Mock<IMapper> _mapperMock;
+    private readonly Mock<ICacheService> _cacheServiceMock;
     private readonly ConsultationService _service;
 
     public ConsultationHistoryFilteringTests()
@@ -28,15 +29,19 @@ public class ConsultationHistoryFilteringTests
         _prescriptionServiceMock = new Mock<IPrescriptionService>();
         _unitOfWorkMock = new Mock<IUnitOfWork>();
         _mapperMock = new Mock<IMapper>();
+        _cacheServiceMock = new Mock<ICacheService>();
         
         // Setup UnitOfWork to return the repository mocks
         _unitOfWorkMock.Setup(u => u.Consultations).Returns(_repositoryMock.Object);
         _unitOfWorkMock.Setup(u => u.Appointments).Returns(_appointmentRepositoryMock.Object);
         
+        // Cache service defaults to null returns for cache misses
+        
         _service = new ConsultationService(
             _unitOfWorkMock.Object,
             _prescriptionServiceMock.Object,
-            _mapperMock.Object);
+            _mapperMock.Object,
+            _cacheServiceMock.Object);
     }
 
     #region GetPatientHistoryAsync Tests
