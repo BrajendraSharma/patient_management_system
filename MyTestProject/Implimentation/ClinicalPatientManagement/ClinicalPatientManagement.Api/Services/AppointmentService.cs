@@ -1,7 +1,7 @@
 using AutoMapper;
 using ClinicalPatientManagement.Api.DTOs;
 using ClinicalPatientManagement.Api.Models;
-using ClinicalPatientManagement.Api.Repositories;
+using ClinicalPatientManagement.Api.Services;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using ILogger = Serilog.ILogger;
@@ -11,18 +11,17 @@ namespace ClinicalPatientManagement.Api.Services;
 /// <summary>
 /// Service implementation for appointment management operations
 /// Step 7: Appointment Scheduling - Business Logic Layer with AutoMapper
+/// Phase 2: Updated to use IUnitOfWork pattern for transaction management
 /// </summary>
 public class AppointmentService : IAppointmentService
 {
-    private readonly IAppointmentRepository _repository;
-    private readonly IPatientRepository _patientRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly ILogger _logger;
 
-    public AppointmentService(IAppointmentRepository repository, IPatientRepository patientRepository, IMapper mapper)
+    public AppointmentService(IUnitOfWork unitOfWork, IMapper mapper)
     {
-        _repository = repository ?? throw new ArgumentNullException(nameof(repository));
-        _patientRepository = patientRepository ?? throw new ArgumentNullException(nameof(patientRepository));
+        _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         _logger = Log.ForContext<AppointmentService>();
     }
@@ -35,7 +34,7 @@ public class AppointmentService : IAppointmentService
         try
         {
             _logger.Information("Fetching all appointments");
-            var appointments = await _repository.GetAll().ToListAsync(cancellationToken);
+            var appointments = await _unitOfWork.Appointments.GetAll().ToListAsync(cancellationToken);
             return _mapper.Map<IEnumerable<AppointmentDto>>(appointments);
         }
         catch (Exception ex)
@@ -53,7 +52,7 @@ public class AppointmentService : IAppointmentService
         try
         {
             _logger.Information("Fetching appointment with ID {AppointmentId}", id);
-            var appointment = await _repository.GetByIdAsync(id, cancellationToken);
+            var appointment = await _unitOfWork.Appointments.GetByIdAsync(id, cancellationToken);
             return appointment == null ? null : _mapper.Map<AppointmentDto>(appointment);
         }
         catch (Exception ex)
@@ -65,6 +64,7 @@ public class AppointmentService : IAppointmentService
 
     /// <summary>
     /// Create new appointment with validation and conflict checking
+    /// Phase 2: Uses UnitOfWork to persist changes (ensures ACID compliance)
     /// </summary>
     public async Task<AppointmentDto> CreateAsync(CreateAppointmentDto createDto, CancellationToken cancellationToken = default)
     {
@@ -82,7 +82,7 @@ public class AppointmentService : IAppointmentService
             }
 
             // Check if patient exists
-            if (!await _patientRepository.ExistsAsync(createDto.PatientId, cancellationToken))
+            if (!await _unitOfWork.Patients.ExistsAsync(createDto.PatientId, cancellationToken))
             {
                 var errorMsg = $"Patient with ID {createDto.PatientId} not found";
                 _logger.Warning(errorMsg);
@@ -90,7 +90,7 @@ public class AppointmentService : IAppointmentService
             }
 
             // Check for appointment conflicts
-            if (await _repository.HasConflictAsync(createDto.PatientId, createDto.AppointmentDate, cancellationToken))
+            if (await _unitOfWork.Appointments.HasConflictAsync(createDto.PatientId, createDto.AppointmentDate, cancellationToken))
             {
                 var errorMsg = $"Patient already has an appointment scheduled within 30 minutes of {createDto.AppointmentDate}";
                 _logger.Warning(errorMsg);
@@ -98,7 +98,10 @@ public class AppointmentService : IAppointmentService
             }
 
             var appointment = _mapper.Map<Appointment>(createDto);
-            var createdAppointment = await _repository.AddAsync(appointment, cancellationToken);
+            var createdAppointment = await _unitOfWork.Appointments.AddAsync(appointment, cancellationToken);
+            
+            // Persist changes through UnitOfWork
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             _logger.Information("Appointment created successfully with ID {AppointmentId} for patient {PatientId}", createdAppointment.Id, createDto.PatientId);
             return _mapper.Map<AppointmentDto>(createdAppointment);
@@ -112,6 +115,7 @@ public class AppointmentService : IAppointmentService
 
     /// <summary>
     /// Update existing appointment with validation
+    /// Phase 2: Uses UnitOfWork to persist changes (ensures ACID compliance)
     /// </summary>
     public async Task<AppointmentDto> UpdateAsync(int id, UpdateAppointmentDto updateDto, CancellationToken cancellationToken = default)
     {
@@ -120,7 +124,7 @@ public class AppointmentService : IAppointmentService
             if (updateDto == null)
                 throw new ArgumentNullException(nameof(updateDto));
 
-            var existingAppointment = await _repository.GetByIdAsync(id, cancellationToken);
+            var existingAppointment = await _unitOfWork.Appointments.GetByIdAsync(id, cancellationToken);
             if (existingAppointment == null)
             {
                 _logger.Warning("Appointment with ID {AppointmentId} not found", id);
@@ -146,7 +150,7 @@ public class AppointmentService : IAppointmentService
             // Check for appointment conflicts (excluding current appointment)
             if (existingAppointment.PatientId != updateDto.PatientId || existingAppointment.AppointmentDate != updateDto.AppointmentDate)
             {
-                if (await _repository.HasConflictAsync(updateDto.PatientId, updateDto.AppointmentDate, cancellationToken))
+                if (await _unitOfWork.Appointments.HasConflictAsync(updateDto.PatientId, updateDto.AppointmentDate, cancellationToken))
                 {
                     var errorMsg = $"Patient already has an appointment scheduled within 30 minutes of {updateDto.AppointmentDate}";
                     _logger.Warning(errorMsg);
@@ -159,7 +163,11 @@ public class AppointmentService : IAppointmentService
             existingAppointment.Status = updateDto.Status;
             existingAppointment.Notes = updateDto.Notes;
 
-            var updatedAppointment = await _repository.UpdateAsync(existingAppointment, cancellationToken);
+            var updatedAppointment = await _unitOfWork.Appointments.UpdateAsync(existingAppointment, cancellationToken);
+            
+            // Persist changes through UnitOfWork
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            
             _logger.Information("Appointment {AppointmentId} updated successfully", id);
             return _mapper.Map<AppointmentDto>(updatedAppointment);
         }
@@ -172,15 +180,18 @@ public class AppointmentService : IAppointmentService
 
     /// <summary>
     /// Delete appointment by ID
+    /// Phase 2: Uses UnitOfWork to persist changes (ensures ACID compliance)
     /// </summary>
     public async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
         try
         {
             _logger.Information("Deleting appointment with ID {AppointmentId}", id);
-            var result = await _repository.DeleteAsync(id, cancellationToken);
+            var result = await _unitOfWork.Appointments.DeleteAsync(id, cancellationToken);
             if (result)
             {
+                // Persist changes through UnitOfWork
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
                 _logger.Information("Appointment {AppointmentId} deleted successfully", id);
             }
             else
@@ -204,7 +215,7 @@ public class AppointmentService : IAppointmentService
         try
         {
             _logger.Information("Fetching appointments for patient {PatientId}", patientId);
-            var appointments = await _repository.GetByPatientId(patientId).ToListAsync(cancellationToken);
+            var appointments = await _unitOfWork.Appointments.GetByPatientId(patientId).ToListAsync(cancellationToken);
             return _mapper.Map<IEnumerable<AppointmentDto>>(appointments);
         }
         catch (Exception ex)
@@ -222,7 +233,7 @@ public class AppointmentService : IAppointmentService
         try
         {
             _logger.Information("Fetching appointments for patient {PatientId} between {StartDate} and {EndDate}", patientId, startDate, endDate);
-            var appointments = await _repository.GetByPatientIdAndDateRangeAsync(patientId, startDate, endDate, cancellationToken);
+            var appointments = await _unitOfWork.Appointments.GetByPatientIdAndDateRangeAsync(patientId, startDate, endDate, cancellationToken);
             return _mapper.Map<IEnumerable<AppointmentDto>>(appointments);
         }
         catch (Exception ex)
@@ -240,7 +251,7 @@ public class AppointmentService : IAppointmentService
         try
         {
             _logger.Information("Fetching appointments for date {Date}", date.Date);
-            var appointments = await _repository.GetByDateAsync(date, cancellationToken);
+            var appointments = await _unitOfWork.Appointments.GetByDateAsync(date, cancellationToken);
             return _mapper.Map<IEnumerable<AppointmentDto>>(appointments);
         }
         catch (Exception ex)
@@ -258,7 +269,7 @@ public class AppointmentService : IAppointmentService
         try
         {
             _logger.Information("Fetching appointments with status {Status} for date {Date}", status, date.Date);
-            var appointments = await _repository.GetByDateAndStatusAsync(date, status, cancellationToken);
+            var appointments = await _unitOfWork.Appointments.GetByDateAndStatusAsync(date, status, cancellationToken);
             return _mapper.Map<IEnumerable<AppointmentDto>>(appointments);
         }
         catch (Exception ex)
@@ -276,7 +287,7 @@ public class AppointmentService : IAppointmentService
         try
         {
             _logger.Information("Updating appointment {AppointmentId} status to {Status}", id, status);
-            var appointment = await _repository.UpdateStatusAsync(id, status, cancellationToken);
+            var appointment = await _unitOfWork.Appointments.UpdateStatusAsync(id, status, cancellationToken);
             _logger.Information("Appointment {AppointmentId} status updated to {Status}", id, status);
             return _mapper.Map<AppointmentDto>(appointment);
         }
@@ -295,7 +306,7 @@ public class AppointmentService : IAppointmentService
         try
         {
             _logger.Information("Fetching upcoming appointments for patient {PatientId}", patientId);
-            var appointments = await _repository.GetUpcomingAppointmentsAsync(patientId, cancellationToken);
+            var appointments = await _unitOfWork.Appointments.GetUpcomingAppointmentsAsync(patientId, cancellationToken);
             return _mapper.Map<IEnumerable<AppointmentDto>>(appointments);
         }
         catch (Exception ex)
@@ -313,7 +324,7 @@ public class AppointmentService : IAppointmentService
         try
         {
             _logger.Information("Checking for appointment conflicts for patient {PatientId} at {AppointmentDate}", patientId, appointmentDate);
-            return await _repository.HasConflictAsync(patientId, appointmentDate, cancellationToken);
+            return await _unitOfWork.Appointments.HasConflictAsync(patientId, appointmentDate, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -327,11 +338,11 @@ public class AppointmentService : IAppointmentService
     /// </summary>
     public async Task<bool> ExistsAsync(int id, CancellationToken cancellationToken = default)
     {
-        return await _repository.ExistsAsync(id, cancellationToken);
+        return await _unitOfWork.Appointments.ExistsAsync(id, cancellationToken);
     }
 
     /// <summary>
-    /// Validate appointment data
+    /// Validate appointment data with enhanced checks
     /// </summary>
     public bool ValidateAppointmentData(CreateAppointmentDto dto, out List<string> errors)
     {
@@ -343,21 +354,31 @@ public class AppointmentService : IAppointmentService
             return false;
         }
 
+        // Patient ID validation
         if (dto.PatientId <= 0)
             errors.Add("Patient ID must be greater than 0");
 
+        // Appointment date validation
         if (dto.AppointmentDate == default)
             errors.Add("Appointment date is required");
-
-        if (dto.AppointmentDate < DateTime.UtcNow)
+        else if (dto.AppointmentDate < DateTime.UtcNow)
             errors.Add("Appointment date cannot be in the past");
+        else if (dto.AppointmentDate > DateTime.UtcNow.AddYears(1))
+            errors.Add("Appointment cannot be scheduled more than 1 year in advance");
 
+        // Status validation
         if (string.IsNullOrWhiteSpace(dto.Status))
             errors.Add("Status is required");
+        else
+        {
+            var validStatuses = new[] { "Scheduled", "Completed", "Cancelled", "No-Show" };
+            if (!validStatuses.Contains(dto.Status))
+                errors.Add($"Status must be one of: {string.Join(", ", validStatuses)}");
+        }
 
-        var validStatuses = new[] { "Scheduled", "Completed", "Cancelled", "No-Show" };
-        if (!validStatuses.Contains(dto.Status))
-            errors.Add($"Status must be one of: {string.Join(", ", validStatuses)}");
+        // Notes validation (optional)
+        if (!string.IsNullOrEmpty(dto.Notes) && dto.Notes.Length > 1000)
+            errors.Add("Notes cannot exceed 1000 characters");
 
         return errors.Count == 0;
     }

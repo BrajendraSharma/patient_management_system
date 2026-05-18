@@ -38,7 +38,8 @@ public class ConsultationRepository : IConsultationRepository
     }
 
     /// <summary>
-    /// Add new consultation
+    /// Add new consultation (NOTE: Changes are not persisted until UnitOfWork.SaveChangesAsync() is called)
+    /// Phase 2: Architectural Improvements - Repository Pattern Fix
     /// </summary>
     public async Task<Consultation> AddAsync(Consultation entity, CancellationToken cancellationToken = default)
     {
@@ -47,12 +48,14 @@ public class ConsultationRepository : IConsultationRepository
 
         entity.CreatedAt = DateTime.UtcNow;
         _context.Consultations.Add(entity);
-        await _context.SaveChangesAsync(cancellationToken);
+        // NOTE: SaveChangesAsync is NOT called here - handled by UnitOfWork
+        await Task.CompletedTask; // Ensure this is still async-compatible
         return entity;
     }
 
     /// <summary>
-    /// Update existing consultation
+    /// Update existing consultation (NOTE: Changes are not persisted until UnitOfWork.SaveChangesAsync() is called)
+    /// Phase 2: Architectural Improvements - Repository Pattern Fix
     /// </summary>
     public async Task<Consultation> UpdateAsync(Consultation entity, CancellationToken cancellationToken = default)
     {
@@ -71,12 +74,13 @@ public class ConsultationRepository : IConsultationRepository
         existingConsultation.UpdatedAt = DateTime.UtcNow;
 
         _context.Consultations.Update(existingConsultation);
-        await _context.SaveChangesAsync(cancellationToken);
+        // NOTE: SaveChangesAsync is NOT called here - handled by UnitOfWork
         return existingConsultation;
     }
 
     /// <summary>
-    /// Delete consultation by ID
+    /// Delete consultation by ID (NOTE: Changes are not persisted until UnitOfWork.SaveChangesAsync() is called)
+    /// Phase 2: Architectural Improvements - Repository Pattern Fix
     /// </summary>
     public async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
@@ -85,7 +89,7 @@ public class ConsultationRepository : IConsultationRepository
             return false;
 
         _context.Consultations.Remove(consultation);
-        await _context.SaveChangesAsync(cancellationToken);
+        // NOTE: SaveChangesAsync is NOT called here - handled by UnitOfWork
         return true;
     }
 

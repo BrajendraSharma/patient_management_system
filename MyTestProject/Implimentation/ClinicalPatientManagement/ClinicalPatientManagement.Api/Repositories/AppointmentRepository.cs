@@ -38,7 +38,8 @@ public class AppointmentRepository : IAppointmentRepository
     }
 
     /// <summary>
-    /// Add new appointment
+    /// Add new appointment (NOTE: Changes are not persisted until UnitOfWork.SaveChangesAsync() is called)
+    /// Phase 2: Architectural Improvements - Repository Pattern Fix
     /// </summary>
     public async Task<Appointment> AddAsync(Appointment entity, CancellationToken cancellationToken = default)
     {
@@ -52,12 +53,13 @@ public class AppointmentRepository : IAppointmentRepository
 
         entity.CreatedAt = DateTime.UtcNow;
         _context.Appointments.Add(entity);
-        await _context.SaveChangesAsync(cancellationToken);
+        // NOTE: SaveChangesAsync is NOT called here - handled by UnitOfWork
         return entity;
     }
 
     /// <summary>
-    /// Update existing appointment
+    /// Update existing appointment (NOTE: Changes are not persisted until UnitOfWork.SaveChangesAsync() is called)
+    /// Phase 2: Architectural Improvements - Repository Pattern Fix
     /// </summary>
     public async Task<Appointment> UpdateAsync(Appointment entity, CancellationToken cancellationToken = default)
     {
@@ -75,12 +77,13 @@ public class AppointmentRepository : IAppointmentRepository
         existingAppointment.UpdatedAt = DateTime.UtcNow;
 
         _context.Appointments.Update(existingAppointment);
-        await _context.SaveChangesAsync(cancellationToken);
+        // NOTE: SaveChangesAsync is NOT called here - handled by UnitOfWork
         return existingAppointment;
     }
 
     /// <summary>
-    /// Delete appointment by ID
+    /// Delete appointment by ID (NOTE: Changes are not persisted until UnitOfWork.SaveChangesAsync() is called)
+    /// Phase 2: Architectural Improvements - Repository Pattern Fix
     /// </summary>
     public async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
@@ -89,7 +92,7 @@ public class AppointmentRepository : IAppointmentRepository
             return false;
 
         _context.Appointments.Remove(appointment);
-        await _context.SaveChangesAsync(cancellationToken);
+        // NOTE: SaveChangesAsync is NOT called here - handled by UnitOfWork
         return true;
     }
 

@@ -30,11 +30,14 @@ public class ConsultationServiceTests
         _prescriptionServiceMock = new Mock<IPrescriptionService>();
         _unitOfWorkMock = new Mock<IUnitOfWork>();
         _mapperMock = new Mock<IMapper>();
+        
+        // Setup UnitOfWork to return the repository mocks
+        _unitOfWorkMock.Setup(u => u.Consultations).Returns(_repositoryMock.Object);
+        _unitOfWorkMock.Setup(u => u.Appointments).Returns(_appointmentRepositoryMock.Object);
+        
         _service = new ConsultationService(
-            _repositoryMock.Object,
-            _appointmentRepositoryMock.Object,
-            _prescriptionServiceMock.Object,
             _unitOfWorkMock.Object,
+            _prescriptionServiceMock.Object,
             _mapperMock.Object);
     }
 
@@ -669,7 +672,7 @@ public class ConsultationServiceTests
         _mapperMock.Setup(m => m.Map<Consultation>(consultationDto)).Returns(consultation);
         _repositoryMock.Setup(r => r.AddAsync(It.IsAny<Consultation>(), It.IsAny<CancellationToken>())).ReturnsAsync(consultation);
         _mapperMock.Setup(m => m.Map<ConsultationDto>(consultation)).Returns(consultationResultDto);
-        _unitOfWorkMock.Setup(u => u.CommitTransactionAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        _unitOfWorkMock.Setup(u => u.CommitAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
 
         // Act
         var result = await _service.CreateConsultationWithPrescriptionAsync(consultationDto, prescriptionDto);
@@ -681,8 +684,8 @@ public class ConsultationServiceTests
 
         // Verify transaction lifecycle
         _unitOfWorkMock.Verify(u => u.BeginTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
-        _unitOfWorkMock.Verify(u => u.CommitTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
-        _unitOfWorkMock.Verify(u => u.RollbackTransactionAsync(It.IsAny<CancellationToken>()), Times.Never); // Should not rollback on success
+        _unitOfWorkMock.Verify(u => u.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.RollbackAsync(It.IsAny<CancellationToken>()), Times.Never); // Should not rollback on success
         _repositoryMock.Verify(r => r.AddAsync(It.IsAny<Consultation>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -729,7 +732,7 @@ public class ConsultationServiceTests
         _mapperMock.Setup(m => m.Map<Consultation>(consultationDto)).Returns(consultation);
         _repositoryMock.Setup(r => r.AddAsync(It.IsAny<Consultation>(), It.IsAny<CancellationToken>())).ReturnsAsync(consultation);
         _mapperMock.Setup(m => m.Map<ConsultationDto>(consultation)).Returns(consultationResultDto);
-        _unitOfWorkMock.Setup(u => u.CommitTransactionAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        _unitOfWorkMock.Setup(u => u.CommitAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
 
         // Act
         var result = await _service.CreateConsultationWithPrescriptionAsync(consultationDto, null);
@@ -740,7 +743,7 @@ public class ConsultationServiceTests
 
         // Verify transaction was committed
         _unitOfWorkMock.Verify(u => u.BeginTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
-        _unitOfWorkMock.Verify(u => u.CommitTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -759,7 +762,7 @@ public class ConsultationServiceTests
 
         // Setup mocks
         _unitOfWorkMock.Setup(u => u.BeginTransactionAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
-        _unitOfWorkMock.Setup(u => u.RollbackTransactionAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        _unitOfWorkMock.Setup(u => u.RollbackAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(
@@ -769,8 +772,8 @@ public class ConsultationServiceTests
         
         // Verify transaction was rolled back
         _unitOfWorkMock.Verify(u => u.BeginTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
-        _unitOfWorkMock.Verify(u => u.RollbackTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
-        _unitOfWorkMock.Verify(u => u.CommitTransactionAsync(It.IsAny<CancellationToken>()), Times.Never); // Should not commit on error
+        _unitOfWorkMock.Verify(u => u.RollbackAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.CommitAsync(It.IsAny<CancellationToken>()), Times.Never); // Should not commit on error
     }
 
     [Fact]
@@ -790,7 +793,7 @@ public class ConsultationServiceTests
         // Setup mocks
         _unitOfWorkMock.Setup(u => u.BeginTransactionAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         _appointmentRepositoryMock.Setup(r => r.ExistsAsync(999, It.IsAny<CancellationToken>())).ReturnsAsync(false);
-        _unitOfWorkMock.Setup(u => u.RollbackTransactionAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        _unitOfWorkMock.Setup(u => u.RollbackAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(
@@ -800,8 +803,8 @@ public class ConsultationServiceTests
         
         // Verify transaction was rolled back on appointment not found
         _unitOfWorkMock.Verify(u => u.BeginTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
-        _unitOfWorkMock.Verify(u => u.RollbackTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
-        _unitOfWorkMock.Verify(u => u.CommitTransactionAsync(It.IsAny<CancellationToken>()), Times.Never);
+        _unitOfWorkMock.Verify(u => u.RollbackAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.CommitAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -822,7 +825,7 @@ public class ConsultationServiceTests
         _unitOfWorkMock.Setup(u => u.BeginTransactionAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         _appointmentRepositoryMock.Setup(r => r.ExistsAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(true);
         _repositoryMock.Setup(r => r.ExistsByAppointmentIdAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(true); // Already exists
-        _unitOfWorkMock.Setup(u => u.RollbackTransactionAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        _unitOfWorkMock.Setup(u => u.RollbackAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(
@@ -832,8 +835,8 @@ public class ConsultationServiceTests
         
         // Verify transaction was rolled back
         _unitOfWorkMock.Verify(u => u.BeginTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
-        _unitOfWorkMock.Verify(u => u.RollbackTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
-        _unitOfWorkMock.Verify(u => u.CommitTransactionAsync(It.IsAny<CancellationToken>()), Times.Never);
+        _unitOfWorkMock.Verify(u => u.RollbackAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.CommitAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -858,7 +861,7 @@ public class ConsultationServiceTests
 
         // Setup mocks
         _unitOfWorkMock.Setup(u => u.BeginTransactionAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
-        _unitOfWorkMock.Setup(u => u.RollbackTransactionAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        _unitOfWorkMock.Setup(u => u.RollbackAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(
@@ -868,8 +871,8 @@ public class ConsultationServiceTests
         
         // Verify transaction was rolled back on prescription validation failure
         _unitOfWorkMock.Verify(u => u.BeginTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
-        _unitOfWorkMock.Verify(u => u.RollbackTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
-        _unitOfWorkMock.Verify(u => u.CommitTransactionAsync(It.IsAny<CancellationToken>()), Times.Never);
+        _unitOfWorkMock.Verify(u => u.RollbackAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.CommitAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

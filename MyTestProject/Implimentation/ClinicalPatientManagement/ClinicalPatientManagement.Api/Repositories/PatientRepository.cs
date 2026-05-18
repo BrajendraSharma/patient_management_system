@@ -37,7 +37,8 @@ public class PatientRepository : IPatientRepository
     }
 
     /// <summary>
-    /// Add new patient
+    /// Add new patient (NOTE: Changes are not persisted until UnitOfWork.SaveChangesAsync() is called)
+    /// Phase 2: Architectural Improvements - Repository Pattern Fix
     /// </summary>
     public async Task<Patient> AddAsync(Patient entity, CancellationToken cancellationToken = default)
     {
@@ -46,12 +47,14 @@ public class PatientRepository : IPatientRepository
 
         entity.CreatedAt = DateTime.UtcNow;
         _context.Patients.Add(entity);
-        await _context.SaveChangesAsync(cancellationToken);
+        // NOTE: SaveChangesAsync is NOT called here - handled by UnitOfWork
+        await Task.CompletedTask; // Ensure this is still async-compatible
         return entity;
     }
 
     /// <summary>
-    /// Update existing patient
+    /// Update existing patient (NOTE: Changes are not persisted until UnitOfWork.SaveChangesAsync() is called)
+    /// Phase 2: Architectural Improvements - Repository Pattern Fix
     /// </summary>
     public async Task<Patient> UpdateAsync(Patient entity, CancellationToken cancellationToken = default)
     {
@@ -71,12 +74,13 @@ public class PatientRepository : IPatientRepository
         existingPatient.UpdatedAt = DateTime.UtcNow;
 
         _context.Patients.Update(existingPatient);
-        await _context.SaveChangesAsync(cancellationToken);
+        // NOTE: SaveChangesAsync is NOT called here - handled by UnitOfWork
         return existingPatient;
     }
 
     /// <summary>
-    /// Delete patient by ID
+    /// Delete patient by ID (NOTE: Changes are not persisted until UnitOfWork.SaveChangesAsync() is called)
+    /// Phase 2: Architectural Improvements - Repository Pattern Fix
     /// </summary>
     public async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
@@ -85,7 +89,7 @@ public class PatientRepository : IPatientRepository
             return false;
 
         _context.Patients.Remove(patient);
-        await _context.SaveChangesAsync(cancellationToken);
+        // NOTE: SaveChangesAsync is NOT called here - handled by UnitOfWork
         return true;
     }
 

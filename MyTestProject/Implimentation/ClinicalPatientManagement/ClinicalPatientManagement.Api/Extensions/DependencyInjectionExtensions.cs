@@ -50,6 +50,9 @@ public static class DependencyInjectionExtensions
         services.AddScoped<IPrescriptionRepository>(sp => sp.GetRequiredService<PrescriptionRepository>());
         services.AddScoped<IPrescriptionService, PrescriptionService>();
 
+        // Step 13: Register Export Service for data export functionality
+        services.AddScoped<IExportService, ExportService>();
+
         // Additional repositories and services will be added in future steps
 
         return services;

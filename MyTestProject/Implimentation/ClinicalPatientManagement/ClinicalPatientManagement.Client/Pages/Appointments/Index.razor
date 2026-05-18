@@ -96,18 +96,34 @@
                                 <small class="text-muted">@appointment.CreatedAt.ToString("dd/MM/yyyy")</small>
                             </td>
                             <td>
-                                <div class="btn-group" role="group">
-                                    <a href="/appointments/@appointment.Id" class="btn btn-sm btn-info" title="View">
-                                        <i class="bi bi-eye"></i>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <!-- View Button - Always enabled -->
+                                    <a href="/appointments/@appointment.Id" class="btn btn-info" title="View Appointment">
+                                        <i class="bi bi-eye"></i> View
                                     </a>
-                                    <a href="/create-consultation/@appointment.Id" class="btn btn-sm btn-success" title="Create Consultation">
-                                        <i class="bi bi-plus-circle"></i>
+
+                                    <!-- Create Consultation - Only for Scheduled/Completed -->
+                                    <a href="/create-consultation/@appointment.Id" 
+                                       class="btn @(CanCreateConsultation(appointment.Status) ? "btn-success" : "btn-success disabled")" 
+                                       title="@(CanCreateConsultation(appointment.Status) ? "Create Consultation" : "Only available for Scheduled or Completed appointments")"
+                                       style="pointer-events: @(CanCreateConsultation(appointment.Status) ? "auto" : "none");">
+                                        <i class="bi bi-plus-circle"></i> Consult
                                     </a>
-                                    <button class="btn btn-sm btn-warning" @onclick="() => ShowEditForm(appointment)" title="Edit">
-                                        <i class="bi bi-pencil"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-danger" @onclick="() => ConfirmDelete(appointment.Id)" title="Delete">
-                                        <i class="bi bi-trash"></i>
+
+                                    <!-- Edit Button - Only for Scheduled -->
+                                    <a href="/appointments/edit/@appointment.Id" 
+                                       class="btn @(CanEdit(appointment.Status) ? "btn-warning" : "btn-warning disabled")" 
+                                       title="@(CanEdit(appointment.Status) ? "Edit Appointment" : "Only Scheduled appointments can be edited")"
+                                       style="pointer-events: @(CanEdit(appointment.Status) ? "auto" : "none");">
+                                        <i class="bi bi-pencil"></i> Edit
+                                    </a>
+
+                                    <!-- Delete Button - Only for Scheduled -->
+                                    <button class="btn @(CanDelete(appointment.Status) ? "btn-danger" : "btn-danger disabled")" 
+                                            @onclick="() => ConfirmDelete(appointment.Id)" 
+                                            disabled="@(!CanDelete(appointment.Status))"
+                                            title="@(CanDelete(appointment.Status) ? "Delete Appointment" : "Only Scheduled appointments can be deleted")">
+                                        <i class="bi bi-trash"></i> Delete
                                     </button>
                                 </div>
                             </td>
@@ -211,5 +227,32 @@
                 Console.WriteLine($"Error deleting appointment: {ex.Message}");
             }
         }
+    }
+
+    /// <summary>
+    /// Determines if a consultation can be created for an appointment.
+    /// Consultations can only be created for Scheduled or Completed appointments.
+    /// </summary>
+    private bool CanCreateConsultation(string status)
+    {
+        return status == "Scheduled" || status == "Completed";
+    }
+
+    /// <summary>
+    /// Determines if an appointment can be edited.
+    /// Only Scheduled appointments can be edited.
+    /// </summary>
+    private bool CanEdit(string status)
+    {
+        return status == "Scheduled";
+    }
+
+    /// <summary>
+    /// Determines if an appointment can be deleted.
+    /// Only Scheduled appointments can be deleted.
+    /// </summary>
+    private bool CanDelete(string status)
+    {
+        return status == "Scheduled";
     }
 }

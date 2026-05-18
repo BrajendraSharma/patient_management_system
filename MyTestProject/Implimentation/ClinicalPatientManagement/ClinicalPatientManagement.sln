@@ -8,6 +8,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClinicalPatientManagement.C
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClinicalPatientManagement.Api.Tests", "ClinicalPatientManagement.Api.Tests\ClinicalPatientManagement.Api.Tests.csproj", "{5FC9E1A8-3B1E-4F5C-A6D0-3B5E8C9F1A2D}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClinicalPatientManagement.Client.Tests", "ClinicalPatientManagement.Client.Tests\ClinicalPatientManagement.Client.Tests.csproj", "{6FD9E1A8-3B1E-4F5C-A6D0-3B5E8C9F1A2E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,5 +28,9 @@ Global
 		{5FC9E1A8-3B1E-4F5C-A6D0-3B5E8C9F1A2D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5FC9E1A8-3B1E-4F5C-A6D0-3B5E8C9F1A2D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5FC9E1A8-3B1E-4F5C-A6D0-3B5E8C9F1A2D}.Release|Any CPU.Build.0 = Release|Any CPU
-	EndGlobalSection
+	{6FD9E1A8-3B1E-4F5C-A6D0-3B5E8C9F1A2E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+	{6FD9E1A8-3B1E-4F5C-A6D0-3B5E8C9F1A2E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+	{6FD9E1A8-3B1E-4F5C-A6D0-3B5E8C9F1A2E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+	{6FD9E1A8-3B1E-4F5C-A6D0-3B5E8C9F1A2E}.Release|Any CPU.Build.0 = Release|Any CPU
+EndGlobalSection
 EndGlobal

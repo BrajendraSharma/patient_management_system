@@ -1,0 +1,357 @@
+﻿
+  Determining projects to restore...
+C:\Project\PracticeProject\githubCopilot\AI_Training\MyTestProject\Implimentati
+on\ClinicalPatientManagement\ClinicalPatientManagement.Api\ClinicalPatientManag
+ement.Api.csproj : warning NU1603: ClinicalPatientManagement.Api depends on 
+Swashbuckle.AspNetCore (>= 6.4.6) but Swashbuckle.AspNetCore 6.4.6 was not 
+found. Swashbuckle.AspNetCore 6.5.0 was resolved instead.
+C:\Project\PracticeProject\githubCopilot\AI_Training\MyTestProject\Implimentati
+on\ClinicalPatientManagement\ClinicalPatientManagement.Api\ClinicalPatientManag
+ement.Api.csproj : warning NU1902: Package 'System.IdentityModel.Tokens.Jwt' 
+7.0.3 has a known moderate severity vulnerability, 
+https://github.com/advisories/GHSA-59j7-ghrg-fj52
+  All projects are up-to-date for restore.
+C:\Project\PracticeProject\githubCopilot\AI_Training\MyTestProject\Implimentati
+on\ClinicalPatientManagement\ClinicalPatientManagement.Api\ClinicalPatientManag
+ement.Api.csproj : warning NU1603: ClinicalPatientManagement.Api depends on 
+Swashbuckle.AspNetCore (>= 6.4.6) but Swashbuckle.AspNetCore 6.4.6 was not 
+found. Swashbuckle.AspNetCore 6.5.0 was resolved instead.
+C:\Project\PracticeProject\githubCopilot\AI_Training\MyTestProject\Implimentati
+on\ClinicalPatientManagement\ClinicalPatientManagement.Api\ClinicalPatientManag
+ement.Api.csproj : warning NU1902: Package 'System.IdentityModel.Tokens.Jwt' 
+7.0.3 has a known moderate severity vulnerability, 
+https://github.com/advisories/GHSA-59j7-ghrg-fj52
+C:\Program 
+Files\dotnet\sdk\9.0.312\Microsoft.Common.CurrentVersion.targets(5394,5): 
+warning MSB3026: Could not copy "C:\Project\PracticeProject\githubCopilot\AI_Tr
+aining\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalPatientMa
+nagement.Api\obj\Debug\net8.0\apphost.exe" to 
+"bin\Debug\net8.0\ClinicalPatientManagement.Api.exe". Beginning retry 1 in 
+1000ms. The process cannot access the file 'C:\Project\PracticeProject\githubCo
+pilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\Clinic
+alPatientManagement.Api\bin\Debug\net8.0\ClinicalPatientManagement.Api.exe' 
+because it is being used by another process. The file is locked by: 
+"ClinicalPatientManagement.Api (17080)" [C:\Project\PracticeProject\githubCopil
+ot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalP
+atientManagement.Api\ClinicalPatientManagement.Api.csproj]
+C:\Program 
+Files\dotnet\sdk\9.0.312\Microsoft.Common.CurrentVersion.targets(5394,5): 
+warning MSB3026: Could not copy "C:\Project\PracticeProject\githubCopilot\AI_Tr
+aining\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalPatientMa
+nagement.Api\obj\Debug\net8.0\apphost.exe" to 
+"bin\Debug\net8.0\ClinicalPatientManagement.Api.exe". Beginning retry 2 in 
+1000ms. The process cannot access the file 'C:\Project\PracticeProject\githubCo
+pilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\Clinic
+alPatientManagement.Api\bin\Debug\net8.0\ClinicalPatientManagement.Api.exe' 
+because it is being used by another process. The file is locked by: 
+"ClinicalPatientManagement.Api (17080)" [C:\Project\PracticeProject\githubCopil
+ot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalP
+atientManagement.Api\ClinicalPatientManagement.Api.csproj]
+C:\Program 
+Files\dotnet\sdk\9.0.312\Microsoft.Common.CurrentVersion.targets(5394,5): 
+warning MSB3026: Could not copy "C:\Project\PracticeProject\githubCopilot\AI_Tr
+aining\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalPatientMa
+nagement.Api\obj\Debug\net8.0\apphost.exe" to 
+"bin\Debug\net8.0\ClinicalPatientManagement.Api.exe". Beginning retry 3 in 
+1000ms. The process cannot access the file 'C:\Project\PracticeProject\githubCo
+pilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\Clinic
+alPatientManagement.Api\bin\Debug\net8.0\ClinicalPatientManagement.Api.exe' 
+because it is being used by another process. The file is locked by: 
+"ClinicalPatientManagement.Api (17080)" [C:\Project\PracticeProject\githubCopil
+ot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalP
+atientManagement.Api\ClinicalPatientManagement.Api.csproj]
+C:\Program 
+Files\dotnet\sdk\9.0.312\Microsoft.Common.CurrentVersion.targets(5394,5): 
+warning MSB3026: Could not copy "C:\Project\PracticeProject\githubCopilot\AI_Tr
+aining\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalPatientMa
+nagement.Api\obj\Debug\net8.0\apphost.exe" to 
+"bin\Debug\net8.0\ClinicalPatientManagement.Api.exe". Beginning retry 4 in 
+1000ms. The process cannot access the file 'C:\Project\PracticeProject\githubCo
+pilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\Clinic
+alPatientManagement.Api\bin\Debug\net8.0\ClinicalPatientManagement.Api.exe' 
+because it is being used by another process. The file is locked by: 
+"ClinicalPatientManagement.Api (17080)" [C:\Project\PracticeProject\githubCopil
+ot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalP
+atientManagement.Api\ClinicalPatientManagement.Api.csproj]
+C:\Program 
+Files\dotnet\sdk\9.0.312\Microsoft.Common.CurrentVersion.targets(5394,5): 
+warning MSB3026: Could not copy "C:\Project\PracticeProject\githubCopilot\AI_Tr
+aining\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalPatientMa
+nagement.Api\obj\Debug\net8.0\apphost.exe" to 
+"bin\Debug\net8.0\ClinicalPatientManagement.Api.exe". Beginning retry 5 in 
+1000ms. The process cannot access the file 'C:\Project\PracticeProject\githubCo
+pilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\Clinic
+alPatientManagement.Api\bin\Debug\net8.0\ClinicalPatientManagement.Api.exe' 
+because it is being used by another process. The file is locked by: 
+"ClinicalPatientManagement.Api (17080)" [C:\Project\PracticeProject\githubCopil
+ot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalP
+atientManagement.Api\ClinicalPatientManagement.Api.csproj]
+C:\Program 
+Files\dotnet\sdk\9.0.312\Microsoft.Common.CurrentVersion.targets(5394,5): 
+warning MSB3026: Could not copy "C:\Project\PracticeProject\githubCopilot\AI_Tr
+aining\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalPatientMa
+nagement.Api\obj\Debug\net8.0\apphost.exe" to 
+"bin\Debug\net8.0\ClinicalPatientManagement.Api.exe". Beginning retry 6 in 
+1000ms. The process cannot access the file 'C:\Project\PracticeProject\githubCo
+pilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\Clinic
+alPatientManagement.Api\bin\Debug\net8.0\ClinicalPatientManagement.Api.exe' 
+because it is being used by another process. The file is locked by: 
+"ClinicalPatientManagement.Api (17080)" [C:\Project\PracticeProject\githubCopil
+ot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalP
+atientManagement.Api\ClinicalPatientManagement.Api.csproj]
+C:\Program 
+Files\dotnet\sdk\9.0.312\Microsoft.Common.CurrentVersion.targets(5394,5): 
+warning MSB3026: Could not copy "C:\Project\PracticeProject\githubCopilot\AI_Tr
+aining\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalPatientMa
+nagement.Api\obj\Debug\net8.0\apphost.exe" to 
+"bin\Debug\net8.0\ClinicalPatientManagement.Api.exe". Beginning retry 7 in 
+1000ms. The process cannot access the file 'C:\Project\PracticeProject\githubCo
+pilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\Clinic
+alPatientManagement.Api\bin\Debug\net8.0\ClinicalPatientManagement.Api.exe' 
+because it is being used by another process. The file is locked by: 
+"ClinicalPatientManagement.Api (17080)" [C:\Project\PracticeProject\githubCopil
+ot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalP
+atientManagement.Api\ClinicalPatientManagement.Api.csproj]
+C:\Program 
+Files\dotnet\sdk\9.0.312\Microsoft.Common.CurrentVersion.targets(5394,5): 
+warning MSB3026: Could not copy "C:\Project\PracticeProject\githubCopilot\AI_Tr
+aining\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalPatientMa
+nagement.Api\obj\Debug\net8.0\apphost.exe" to 
+"bin\Debug\net8.0\ClinicalPatientManagement.Api.exe". Beginning retry 8 in 
+1000ms. The process cannot access the file 'C:\Project\PracticeProject\githubCo
+pilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\Clinic
+alPatientManagement.Api\bin\Debug\net8.0\ClinicalPatientManagement.Api.exe' 
+because it is being used by another process. The file is locked by: 
+"ClinicalPatientManagement.Api (17080)" [C:\Project\PracticeProject\githubCopil
+ot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalP
+atientManagement.Api\ClinicalPatientManagement.Api.csproj]
+C:\Program 
+Files\dotnet\sdk\9.0.312\Microsoft.Common.CurrentVersion.targets(5394,5): 
+warning MSB3026: Could not copy "C:\Project\PracticeProject\githubCopilot\AI_Tr
+aining\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalPatientMa
+nagement.Api\obj\Debug\net8.0\apphost.exe" to 
+"bin\Debug\net8.0\ClinicalPatientManagement.Api.exe". Beginning retry 9 in 
+1000ms. The process cannot access the file 'C:\Project\PracticeProject\githubCo
+pilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\Clinic
+alPatientManagement.Api\bin\Debug\net8.0\ClinicalPatientManagement.Api.exe' 
+because it is being used by another process. The file is locked by: 
+"ClinicalPatientManagement.Api (17080)" [C:\Project\PracticeProject\githubCopil
+ot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalP
+atientManagement.Api\ClinicalPatientManagement.Api.csproj]
+C:\Program 
+Files\dotnet\sdk\9.0.312\Microsoft.Common.CurrentVersion.targets(5394,5): 
+warning MSB3026: Could not copy "C:\Project\PracticeProject\githubCopilot\AI_Tr
+aining\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalPatientMa
+nagement.Api\obj\Debug\net8.0\apphost.exe" to 
+"bin\Debug\net8.0\ClinicalPatientManagement.Api.exe". Beginning retry 10 in 
+1000ms. The process cannot access the file 'C:\Project\PracticeProject\githubCo
+pilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\Clinic
+alPatientManagement.Api\bin\Debug\net8.0\ClinicalPatientManagement.Api.exe' 
+because it is being used by another process. The file is locked by: 
+"ClinicalPatientManagement.Api (17080)" [C:\Project\PracticeProject\githubCopil
+ot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalP
+atientManagement.Api\ClinicalPatientManagement.Api.csproj]
+C:\Program 
+Files\dotnet\sdk\9.0.312\Microsoft.Common.CurrentVersion.targets(5394,5): 
+error MSB3027: Could not copy "C:\Project\PracticeProject\githubCopilot\AI_Trai
+ning\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalPatientMana
+gement.Api\obj\Debug\net8.0\apphost.exe" to 
+"bin\Debug\net8.0\ClinicalPatientManagement.Api.exe". Exceeded retry count of 
+10. Failed. The file is locked by: "ClinicalPatientManagement.Api (17080)" [C:\
+Project\PracticeProject\githubCopilot\AI_Training\MyTestProject\Implimentation\
+ClinicalPatientManagement\ClinicalPatientManagement.Api\ClinicalPatientManageme
+nt.Api.csproj]
+C:\Program 
+Files\dotnet\sdk\9.0.312\Microsoft.Common.CurrentVersion.targets(5394,5): 
+error MSB3021: Unable to copy file "C:\Project\PracticeProject\githubCopilot\AI
+_Training\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalPatien
+tManagement.Api\obj\Debug\net8.0\apphost.exe" to 
+"bin\Debug\net8.0\ClinicalPatientManagement.Api.exe". The process cannot 
+access the file 'C:\Project\PracticeProject\githubCopilot\AI_Training\MyTestPro
+ject\Implimentation\ClinicalPatientManagement\ClinicalPatientManagement.Api\bin
+\Debug\net8.0\ClinicalPatientManagement.Api.exe' because it is being used by 
+another process. [C:\Project\PracticeProject\githubCopilot\AI_Training\MyTestPr
+oject\Implimentation\ClinicalPatientManagement\ClinicalPatientManagement.Api\Cl
+inicalPatientManagement.Api.csproj]
+
+Build FAILED.
+
+C:\Project\PracticeProject\githubCopilot\AI_Training\MyTestProject\Implimentati
+on\ClinicalPatientManagement\ClinicalPatientManagement.Api\ClinicalPatientManag
+ement.Api.csproj : warning NU1603: ClinicalPatientManagement.Api depends on 
+Swashbuckle.AspNetCore (>= 6.4.6) but Swashbuckle.AspNetCore 6.4.6 was not 
+found. Swashbuckle.AspNetCore 6.5.0 was resolved instead.
+C:\Project\PracticeProject\githubCopilot\AI_Training\MyTestProject\Implimentati
+on\ClinicalPatientManagement\ClinicalPatientManagement.Api\ClinicalPatientManag
+ement.Api.csproj : warning NU1902: Package 'System.IdentityModel.Tokens.Jwt' 
+7.0.3 has a known moderate severity vulnerability, 
+https://github.com/advisories/GHSA-59j7-ghrg-fj52
+C:\Project\PracticeProject\githubCopilot\AI_Training\MyTestProject\Implimentati
+on\ClinicalPatientManagement\ClinicalPatientManagement.Api\ClinicalPatientManag
+ement.Api.csproj : warning NU1603: ClinicalPatientManagement.Api depends on 
+Swashbuckle.AspNetCore (>= 6.4.6) but Swashbuckle.AspNetCore 6.4.6 was not 
+found. Swashbuckle.AspNetCore 6.5.0 was resolved instead.
+C:\Project\PracticeProject\githubCopilot\AI_Training\MyTestProject\Implimentati
+on\ClinicalPatientManagement\ClinicalPatientManagement.Api\ClinicalPatientManag
+ement.Api.csproj : warning NU1902: Package 'System.IdentityModel.Tokens.Jwt' 
+7.0.3 has a known moderate severity vulnerability, 
+https://github.com/advisories/GHSA-59j7-ghrg-fj52
+C:\Program 
+Files\dotnet\sdk\9.0.312\Microsoft.Common.CurrentVersion.targets(5394,5): 
+warning MSB3026: Could not copy "C:\Project\PracticeProject\githubCopilot\AI_Tr
+aining\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalPatientMa
+nagement.Api\obj\Debug\net8.0\apphost.exe" to 
+"bin\Debug\net8.0\ClinicalPatientManagement.Api.exe". Beginning retry 1 in 
+1000ms. The process cannot access the file 'C:\Project\PracticeProject\githubCo
+pilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\Clinic
+alPatientManagement.Api\bin\Debug\net8.0\ClinicalPatientManagement.Api.exe' 
+because it is being used by another process. The file is locked by: 
+"ClinicalPatientManagement.Api (17080)" [C:\Project\PracticeProject\githubCopil
+ot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalP
+atientManagement.Api\ClinicalPatientManagement.Api.csproj]
+C:\Program 
+Files\dotnet\sdk\9.0.312\Microsoft.Common.CurrentVersion.targets(5394,5): 
+warning MSB3026: Could not copy "C:\Project\PracticeProject\githubCopilot\AI_Tr
+aining\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalPatientMa
+nagement.Api\obj\Debug\net8.0\apphost.exe" to 
+"bin\Debug\net8.0\ClinicalPatientManagement.Api.exe". Beginning retry 2 in 
+1000ms. The process cannot access the file 'C:\Project\PracticeProject\githubCo
+pilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\Clinic
+alPatientManagement.Api\bin\Debug\net8.0\ClinicalPatientManagement.Api.exe' 
+because it is being used by another process. The file is locked by: 
+"ClinicalPatientManagement.Api (17080)" [C:\Project\PracticeProject\githubCopil
+ot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalP
+atientManagement.Api\ClinicalPatientManagement.Api.csproj]
+C:\Program 
+Files\dotnet\sdk\9.0.312\Microsoft.Common.CurrentVersion.targets(5394,5): 
+warning MSB3026: Could not copy "C:\Project\PracticeProject\githubCopilot\AI_Tr
+aining\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalPatientMa
+nagement.Api\obj\Debug\net8.0\apphost.exe" to 
+"bin\Debug\net8.0\ClinicalPatientManagement.Api.exe". Beginning retry 3 in 
+1000ms. The process cannot access the file 'C:\Project\PracticeProject\githubCo
+pilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\Clinic
+alPatientManagement.Api\bin\Debug\net8.0\ClinicalPatientManagement.Api.exe' 
+because it is being used by another process. The file is locked by: 
+"ClinicalPatientManagement.Api (17080)" [C:\Project\PracticeProject\githubCopil
+ot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalP
+atientManagement.Api\ClinicalPatientManagement.Api.csproj]
+C:\Program 
+Files\dotnet\sdk\9.0.312\Microsoft.Common.CurrentVersion.targets(5394,5): 
+warning MSB3026: Could not copy "C:\Project\PracticeProject\githubCopilot\AI_Tr
+aining\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalPatientMa
+nagement.Api\obj\Debug\net8.0\apphost.exe" to 
+"bin\Debug\net8.0\ClinicalPatientManagement.Api.exe". Beginning retry 4 in 
+1000ms. The process cannot access the file 'C:\Project\PracticeProject\githubCo
+pilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\Clinic
+alPatientManagement.Api\bin\Debug\net8.0\ClinicalPatientManagement.Api.exe' 
+because it is being used by another process. The file is locked by: 
+"ClinicalPatientManagement.Api (17080)" [C:\Project\PracticeProject\githubCopil
+ot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalP
+atientManagement.Api\ClinicalPatientManagement.Api.csproj]
+C:\Program 
+Files\dotnet\sdk\9.0.312\Microsoft.Common.CurrentVersion.targets(5394,5): 
+warning MSB3026: Could not copy "C:\Project\PracticeProject\githubCopilot\AI_Tr
+aining\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalPatientMa
+nagement.Api\obj\Debug\net8.0\apphost.exe" to 
+"bin\Debug\net8.0\ClinicalPatientManagement.Api.exe". Beginning retry 5 in 
+1000ms. The process cannot access the file 'C:\Project\PracticeProject\githubCo
+pilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\Clinic
+alPatientManagement.Api\bin\Debug\net8.0\ClinicalPatientManagement.Api.exe' 
+because it is being used by another process. The file is locked by: 
+"ClinicalPatientManagement.Api (17080)" [C:\Project\PracticeProject\githubCopil
+ot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalP
+atientManagement.Api\ClinicalPatientManagement.Api.csproj]
+C:\Program 
+Files\dotnet\sdk\9.0.312\Microsoft.Common.CurrentVersion.targets(5394,5): 
+warning MSB3026: Could not copy "C:\Project\PracticeProject\githubCopilot\AI_Tr
+aining\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalPatientMa
+nagement.Api\obj\Debug\net8.0\apphost.exe" to 
+"bin\Debug\net8.0\ClinicalPatientManagement.Api.exe". Beginning retry 6 in 
+1000ms. The process cannot access the file 'C:\Project\PracticeProject\githubCo
+pilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\Clinic
+alPatientManagement.Api\bin\Debug\net8.0\ClinicalPatientManagement.Api.exe' 
+because it is being used by another process. The file is locked by: 
+"ClinicalPatientManagement.Api (17080)" [C:\Project\PracticeProject\githubCopil
+ot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalP
+atientManagement.Api\ClinicalPatientManagement.Api.csproj]
+C:\Program 
+Files\dotnet\sdk\9.0.312\Microsoft.Common.CurrentVersion.targets(5394,5): 
+warning MSB3026: Could not copy "C:\Project\PracticeProject\githubCopilot\AI_Tr
+aining\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalPatientMa
+nagement.Api\obj\Debug\net8.0\apphost.exe" to 
+"bin\Debug\net8.0\ClinicalPatientManagement.Api.exe". Beginning retry 7 in 
+1000ms. The process cannot access the file 'C:\Project\PracticeProject\githubCo
+pilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\Clinic
+alPatientManagement.Api\bin\Debug\net8.0\ClinicalPatientManagement.Api.exe' 
+because it is being used by another process. The file is locked by: 
+"ClinicalPatientManagement.Api (17080)" [C:\Project\PracticeProject\githubCopil
+ot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalP
+atientManagement.Api\ClinicalPatientManagement.Api.csproj]
+C:\Program 
+Files\dotnet\sdk\9.0.312\Microsoft.Common.CurrentVersion.targets(5394,5): 
+warning MSB3026: Could not copy "C:\Project\PracticeProject\githubCopilot\AI_Tr
+aining\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalPatientMa
+nagement.Api\obj\Debug\net8.0\apphost.exe" to 
+"bin\Debug\net8.0\ClinicalPatientManagement.Api.exe". Beginning retry 8 in 
+1000ms. The process cannot access the file 'C:\Project\PracticeProject\githubCo
+pilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\Clinic
+alPatientManagement.Api\bin\Debug\net8.0\ClinicalPatientManagement.Api.exe' 
+because it is being used by another process. The file is locked by: 
+"ClinicalPatientManagement.Api (17080)" [C:\Project\PracticeProject\githubCopil
+ot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalP
+atientManagement.Api\ClinicalPatientManagement.Api.csproj]
+C:\Program 
+Files\dotnet\sdk\9.0.312\Microsoft.Common.CurrentVersion.targets(5394,5): 
+warning MSB3026: Could not copy "C:\Project\PracticeProject\githubCopilot\AI_Tr
+aining\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalPatientMa
+nagement.Api\obj\Debug\net8.0\apphost.exe" to 
+"bin\Debug\net8.0\ClinicalPatientManagement.Api.exe". Beginning retry 9 in 
+1000ms. The process cannot access the file 'C:\Project\PracticeProject\githubCo
+pilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\Clinic
+alPatientManagement.Api\bin\Debug\net8.0\ClinicalPatientManagement.Api.exe' 
+because it is being used by another process. The file is locked by: 
+"ClinicalPatientManagement.Api (17080)" [C:\Project\PracticeProject\githubCopil
+ot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalP
+atientManagement.Api\ClinicalPatientManagement.Api.csproj]
+C:\Program 
+Files\dotnet\sdk\9.0.312\Microsoft.Common.CurrentVersion.targets(5394,5): 
+warning MSB3026: Could not copy "C:\Project\PracticeProject\githubCopilot\AI_Tr
+aining\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalPatientMa
+nagement.Api\obj\Debug\net8.0\apphost.exe" to 
+"bin\Debug\net8.0\ClinicalPatientManagement.Api.exe". Beginning retry 10 in 
+1000ms. The process cannot access the file 'C:\Project\PracticeProject\githubCo
+pilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\Clinic
+alPatientManagement.Api\bin\Debug\net8.0\ClinicalPatientManagement.Api.exe' 
+because it is being used by another process. The file is locked by: 
+"ClinicalPatientManagement.Api (17080)" [C:\Project\PracticeProject\githubCopil
+ot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalP
+atientManagement.Api\ClinicalPatientManagement.Api.csproj]
+C:\Program 
+Files\dotnet\sdk\9.0.312\Microsoft.Common.CurrentVersion.targets(5394,5): 
+error MSB3027: Could not copy "C:\Project\PracticeProject\githubCopilot\AI_Trai
+ning\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalPatientMana
+gement.Api\obj\Debug\net8.0\apphost.exe" to 
+"bin\Debug\net8.0\ClinicalPatientManagement.Api.exe". Exceeded retry count of 
+10. Failed. The file is locked by: "ClinicalPatientManagement.Api (17080)" [C:\
+Project\PracticeProject\githubCopilot\AI_Training\MyTestProject\Implimentation\
+ClinicalPatientManagement\ClinicalPatientManagement.Api\ClinicalPatientManageme
+nt.Api.csproj]
+C:\Program 
+Files\dotnet\sdk\9.0.312\Microsoft.Common.CurrentVersion.targets(5394,5): 
+error MSB3021: Unable to copy file "C:\Project\PracticeProject\githubCopilot\AI
+_Training\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalPatien
+tManagement.Api\obj\Debug\net8.0\apphost.exe" to 
+"bin\Debug\net8.0\ClinicalPatientManagement.Api.exe". The process cannot 
+access the file 'C:\Project\PracticeProject\githubCopilot\AI_Training\MyTestPro
+ject\Implimentation\ClinicalPatientManagement\ClinicalPatientManagement.Api\bin
+\Debug\net8.0\ClinicalPatientManagement.Api.exe' because it is being used by 
+another process. [C:\Project\PracticeProject\githubCopilot\AI_Training\MyTestPr
+oject\Implimentation\ClinicalPatientManagement\ClinicalPatientManagement.Api\Cl
+inicalPatientManagement.Api.csproj]
+    14 Warning(s)
+    2 Error(s)
+
+Time Elapsed 00:00:13.26
+
+
+

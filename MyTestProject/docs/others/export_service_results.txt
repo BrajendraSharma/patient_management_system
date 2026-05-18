@@ -1,0 +1,89 @@
+﻿
+dotnet : [xUnit.net 00:00:03.27]     ClinicalPatientManagement.Api.Tests.Export
+ServiceTests.ExportDataAsync_WithPatientDataType_ReturnsExcelFile [FAIL]
+  Failed ClinicalPatientManagement.Api.Tests.ExportServiceTests.ExportDataAsync
+_WithPatientDataType_ReturnsExcelFile [1 s]
+   at ClinicalPatientManagement.Api.Services.ExportService.GetPatientsForExport
+Async(CancellationToken cancellationToken) in C:\Project\PracticeProject\github
+Copilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\Clin
+icalPatientManagement.Api\Services\ExportService.cs:line 200
+   at ClinicalPatientManagement.Api.Services.ExportService.ExportDataAsync(Expo
+rtRequest request, CancellationToken cancellationToken) in C:\Project\PracticeP
+roject\githubCopilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientMa
+nagement\ClinicalPatientManagement.Api\Services\ExportService.cs:line 56
+   at ClinicalPatientManagement.Api.Tests.ExportServiceTests.ExportDataAsync_Wi
+thPatientDataType_ReturnsExcelFile() in C:\Project\PracticeProject\githubCopilo
+t\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalPa
+tientManagement.Api.Tests\ExportServiceTests.cs:line 64
+[xUnit.net 00:00:03.28]     ClinicalPatientManagement.Api.Tests.ExportServiceTe
+sts.GetPrescriptionsForExportAsync_ReturnsFormattedPrescriptionData [FAIL]
+[xUnit.net 00:00:03.28]     ClinicalPatientManagement.Api.Tests.ExportServiceTe
+sts.GetPrescriptionsForExportAsync_WithPatientIdFilter_FiltersCorrectly [FAIL]
+[xUnit.net 00:00:03.30]     ClinicalPatientManagement.Api.Tests.ExportServiceTe
+sts.ExportDataAsync_WithEmptyData_ReturnsValidResponse [FAIL]
+[xUnit.net 00:00:03.30]     ClinicalPatientManagement.Api.Tests.ExportServiceTe
+sts.ExportDataAsync_ValidateFileNameGeneration [FAIL]
+[xUnit.net 00:00:03.30]     ClinicalPatientManagement.Api.Tests.ExportServiceTe
+sts.GetPatientsForExportAsync_ReturnsFormattedPatientData [FAIL]
+  Failed ClinicalPatientManagement.Api.Tests.ExportServiceTests.GetPrescription
+sForExportAsync_ReturnsFormattedPrescriptionData [3 ms]
+   at ClinicalPatientManagement.Api.Services.ExportService.GetPrescriptionsForE
+xportAsync(Nullable`1 patientId, CancellationToken cancellationToken) in C:\Pro
+ject\PracticeProject\githubCopilot\AI_Training\MyTestProject\Implimentation\Cli
+nicalPatientManagement\ClinicalPatientManagement.Api\Services\ExportService.cs:
+line 234
+   at ClinicalPatientManagement.Api.Tests.ExportServiceTests.GetPrescriptionsFo
+rExportAsync_ReturnsFormattedPrescriptionData() in C:\Project\PracticeProject\g
+ithubCopilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement
+\ClinicalPatientManagement.Api.Tests\ExportServiceTests.cs:line 278
+  Failed ClinicalPatientManagement.Api.Tests.ExportServiceTests.GetPrescription
+sForExportAsync_WithPatientIdFilter_FiltersCorrectly [1 ms]
+   at ClinicalPatientManagement.Api.Services.ExportService.GetPrescriptionsForE
+xportAsync(Nullable`1 patientId, CancellationToken cancellationToken) in C:\Pro
+ject\PracticeProject\githubCopilot\AI_Training\MyTestProject\Implimentation\Cli
+nicalPatientManagement\ClinicalPatientManagement.Api\Services\ExportService.cs:
+line 234
+   at ClinicalPatientManagement.Api.Tests.ExportServiceTests.GetPrescriptionsFo
+rExportAsync_WithPatientIdFilter_FiltersCorrectly() in C:\Project\PracticeProje
+ct\githubCopilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManage
+ment\ClinicalPatientManagement.Api.Tests\ExportServiceTests.cs:line 337
+  Failed ClinicalPatientManagement.Api.Tests.ExportServiceTests.ExportDataAsync
+_WithEmptyData_ReturnsValidResponse [< 1 ms]
+   at ClinicalPatientManagement.Api.Services.ExportService.GetPatientsForExport
+Async(CancellationToken cancellationToken) in C:\Project\PracticeProject\github
+Copilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\Clin
+icalPatientManagement.Api\Services\ExportService.cs:line 200
+   at ClinicalPatientManagement.Api.Services.ExportService.ExportDataAsync(Expo
+rtRequest request, CancellationToken cancellationToken) in C:\Project\PracticeP
+roject\githubCopilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientMa
+nagement\ClinicalPatientManagement.Api\Services\ExportService.cs:line 56
+   at ClinicalPatientManagement.Api.Tests.ExportServiceTests.ExportDataAsync_Wi
+thEmptyData_ReturnsValidResponse() in C:\Project\PracticeProject\githubCopilot\
+AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalPati
+entManagement.Api.Tests\ExportServiceTests.cs:line 366
+  Failed ClinicalPatientManagement.Api.Tests.ExportServiceTests.ExportDataAsync
+_ValidateFileNameGeneration [< 1 ms]
+   at ClinicalPatientManagement.Api.Services.ExportService.GetPatientsForExport
+Async(CancellationToken cancellationToken) in C:\Project\PracticeProject\github
+Copilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\Clin
+icalPatientManagement.Api\Services\ExportService.cs:line 200
+   at ClinicalPatientManagement.Api.Services.ExportService.ExportDataAsync(Expo
+rtRequest request, CancellationToken cancellationToken) in C:\Project\PracticeP
+roject\githubCopilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientMa
+nagement\ClinicalPatientManagement.Api\Services\ExportService.cs:line 56
+   at ClinicalPatientManagement.Api.Tests.ExportServiceTests.ExportDataAsync_Va
+lidateFileNameGeneration() in C:\Project\PracticeProject\githubCopilot\AI_Train
+ing\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalPatientManag
+ement.Api.Tests\ExportServiceTests.cs:line 393
+  Failed ClinicalPatientManagement.Api.Tests.ExportServiceTests.GetPatientsForE
+xportAsync_ReturnsFormattedPatientData [< 1 ms]
+   at ClinicalPatientManagement.Api.Services.ExportService.GetPatientsForExport
+Async(CancellationToken cancellationToken) in C:\Project\PracticeProject\github
+Copilot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\Clin
+icalPatientManagement.Api\Services\ExportService.cs:line 200
+   at ClinicalPatientManagement.Api.Tests.ExportServiceTests.GetPatientsForExpo
+rtAsync_ReturnsFormattedPatientData() in C:\Project\PracticeProject\githubCopil
+ot\AI_Training\MyTestProject\Implimentation\ClinicalPatientManagement\ClinicalP
+atientManagement.Api.Tests\ExportServiceTests.cs:line 137
+
+

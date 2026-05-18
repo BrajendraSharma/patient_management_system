@@ -1,0 +1,570 @@
+/* ============================================================================
+   STEP 13.5: ACCESSIBILITY & PRINT STYLES
+   Clinical Patient Management System
+   
+   This file provides:
+   - Print-specific styling for prescription output
+   - Accessibility enhancements (focus indicators, high contrast)
+   - Responsive design utilities
+   - Reduced motion support
+   - Dark mode preferences
+   ========================================================================== */
+
+/* ============================================================================
+   1. PRINT STYLES
+   ========================================================================== */
+
+@media print {
+    /* ---- 1.1 Hide Interactive Elements ---- */
+    
+    /* Hide navbar and navigation */
+    .navbar,
+    .navbar-expand-lg,
+    nav[role="navigation"],
+    nav.navbar,
+    .nav-link,
+    .dropdown-menu {
+        display: none !important;
+    }
+    
+    /* Hide all buttons except print-specific ones */
+    .btn:not(.btn-print),
+    button:not(.btn-print),
+    [data-print="hide"],
+    .print-hide,
+    .sidebar,
+    .aside,
+    .advertisement,
+    #blazor-error-ui {
+        display: none !important;
+    }
+    
+    /* Hide form controls */
+    form,
+    input[type="text"],
+    input[type="email"],
+    input[type="date"],
+    select,
+    textarea {
+        display: none !important;
+    }
+    
+    /* ---- 1.2 Optimize Page Layout for Printing ---- */
+    
+    * {
+        background: transparent !important;
+        color: #000 !important;
+        text-shadow: none !important;
+        box-shadow: none !important;
+    }
+    
+    body {
+        font-size: 12pt;
+        line-height: 1.5;
+        color: #000;
+        background: #fff;
+        margin: 0;
+        padding: 0;
+    }
+    
+    /* ---- 1.3 Container & Content Area ---- */
+    
+    .container,
+    .container-fluid,
+    .container-lg,
+    .container-md,
+    .container-sm,
+    .container-xl,
+    .container-xxl {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 20mm !important;
+    }
+    
+    .content,
+    main {
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    /* ---- 1.4 Prescription-Specific Styling ---- */
+    
+    .prescription-container {
+        page-break-after: always;
+        margin: 0;
+        padding: 20mm;
+        background: #fff;
+    }
+    
+    .prescription-header {
+        border-bottom: 2px solid #000;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        text-align: center;
+    }
+    
+    .prescription-header h1,
+    .prescription-header h2,
+    .prescription-header h3 {
+        margin: 5px 0;
+        font-size: 16pt;
+    }
+    
+    .prescription-patient-info {
+        margin: 15px 0;
+        padding: 10px;
+        border: 1px solid #000;
+    }
+    
+    .prescription-vitals {
+        margin: 15px 0;
+        padding: 10px;
+    }
+    
+    .prescription-medications {
+        margin: 15px 0;
+        width: 100%;
+    }
+    
+    .prescription-medications table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .prescription-medications th,
+    .prescription-medications td {
+        border: 1px solid #000;
+        padding: 8px;
+        text-align: left;
+    }
+    
+    .prescription-medications thead {
+        background: #ddd;
+        font-weight: bold;
+    }
+    
+    .prescription-footer {
+        margin-top: 40mm;
+        border-top: 1px solid #000;
+        padding-top: 10px;
+    }
+    
+    /* ---- 1.5 Typography for Printing ---- */
+    
+    h1, h2, h3, h4, h5, h6 {
+        page-break-after: avoid;
+        page-break-inside: avoid;
+    }
+    
+    p {
+        orphans: 3;
+        widows: 3;
+        page-break-inside: avoid;
+    }
+    
+    a {
+        text-decoration: none;
+        color: #000;
+    }
+    
+    a[href]:after {
+        content: none;
+    }
+    
+    /* ---- 1.6 Table Printing ---- */
+    
+    table {
+        border-collapse: collapse;
+        page-break-inside: auto;
+    }
+    
+    tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+    }
+    
+    thead {
+        display: table-header-group;
+    }
+    
+    tfoot {
+        display: table-footer-group;
+    }
+    
+    /* ---- 1.7 Image & Media Printing ---- */
+    
+    img {
+        max-width: 100%;
+        page-break-inside: avoid;
+    }
+    
+    video,
+    audio,
+    iframe {
+        display: none !important;
+    }
+    
+    /* ---- 1.8 Link & Form Handling ---- */
+    
+    .no-print,
+    [data-print="hide"] {
+        display: none !important;
+    }
+    
+    .print-only {
+        display: block !important;
+    }
+    
+    .screen-only {
+        display: none !important;
+    }
+}
+
+/* ============================================================================
+   2. ACCESSIBILITY STYLES
+   ========================================================================== */
+
+/* ---- 2.1 Focus Visible Indicator ---- */
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible {
+    outline: 3px solid #0066cc;
+    outline-offset: 2px;
+    box-shadow: inset 0 0 0 3px #fff, 0 0 0 5px #0066cc;
+}
+
+/* Fallback for older browsers (less specific than :focus-visible) */
+button:focus,
+a:focus,
+input:focus,
+select:focus,
+textarea:focus,
+[role="button"]:focus {
+    outline: 2px solid #0066cc;
+    outline-offset: 1px;
+}
+
+/* Remove focus outline only when focus-visible is present */
+button:focus:not(:focus-visible),
+a:focus:not(:focus-visible),
+input:focus:not(:focus-visible),
+select:focus:not(:focus-visible),
+textarea:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* ---- 2.2 Button Accessibility States ---- */
+
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled,
+[role="button"][aria-disabled="true"] {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+button:disabled:hover,
+[role="button"][aria-disabled="true"]:hover {
+    background-color: inherit;
+    color: inherit;
+}
+
+/* ---- 2.3 Error Styling ---- */
+
+input:invalid,
+[aria-invalid="true"],
+.invalid {
+    border-color: #dc3545;
+    box-shadow: inset 0 0 0 2px rgba(220, 53, 69, 0.2);
+}
+
+.form-control.is-invalid,
+.form-control:invalid,
+[aria-invalid="true"] {
+    border-color: #dc3545;
+}
+
+.validation-message,
+[role="alert"],
+.alert {
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 4px;
+}
+
+/* ---- 2.4 Skip Navigation Link ---- */
+
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: #000;
+    color: #fff;
+    padding: 8px;
+    text-decoration: none;
+    z-index: 100;
+}
+
+.skip-link:focus {
+    top: 0;
+}
+
+/* ---- 2.5 Form Label Styling ---- */
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #333;
+}
+
+label .text-danger {
+    color: #dc3545;
+    margin-left: 4px;
+}
+
+.form-text {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+/* ---- 2.6 Help Text Association ---- */
+
+[aria-describedby] {
+    position: relative;
+}
+
+.form-text[id],
+.help-text[id] {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-top: 4px;
+}
+
+/* ============================================================================
+   3. HIGH CONTRAST MODE SUPPORT
+   ========================================================================== */
+
+@media (prefers-contrast: more) {
+    body {
+        font-weight: 500;
+    }
+    
+    button,
+    input,
+    select,
+    textarea,
+    [role="button"] {
+        border-width: 2px;
+    }
+    
+    .btn {
+        border-width: 2px;
+    }
+    
+    .alert {
+        border-width: 2px;
+    }
+    
+    .card {
+        border-width: 2px;
+    }
+    
+    button:focus-visible,
+    a:focus-visible,
+    input:focus-visible {
+        outline-width: 4px;
+    }
+}
+
+/* ============================================================================
+   4. REDUCED MOTION SUPPORT
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ============================================================================
+   5. DARK MODE SUPPORT
+   ========================================================================== */
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        color-scheme: dark;
+    }
+    
+    /* Dark mode will be handled by Bootstrap when available */
+    /* or custom theme can be implemented here */
+}
+
+/* ============================================================================
+   6. RESPONSIVE DESIGN UTILITIES
+   ========================================================================== */
+
+/* ---- 6.1 Mobile-First Base (375px) ---- */
+
+.responsive-table {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.responsive-table table {
+    min-width: 100%;
+    width: 100%;
+}
+
+.responsive-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+/* ---- 6.2 Tablet (768px and up) ---- */
+
+@media (min-width: 768px) {
+    .responsive-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+    
+    .form-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    .card-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* ---- 6.3 Desktop (1024px and up) ---- */
+
+@media (min-width: 1024px) {
+    .responsive-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .form-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+    
+    .card-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* ---- 6.4 Large Desktop (1920px and up) ---- */
+
+@media (min-width: 1920px) {
+    .responsive-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .form-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .card-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+/* ============================================================================
+   7. TOUCH-FRIENDLY SIZES
+   ========================================================================== */
+
+/* Ensure touch targets are at least 44x44px */
+
+button,
+a,
+[role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+    width: 44px;
+    height: 44px;
+    cursor: pointer;
+}
+
+/* ============================================================================
+   8. UTILITY CLASSES
+   ========================================================================== */
+
+/* Print utilities */
+.print-only {
+    display: none;
+}
+
+.print-hide {
+    display: block;
+}
+
+.no-print {
+    display: block;
+}
+
+@media print {
+    .print-only {
+        display: block !important;
+    }
+    
+    .print-hide,
+    .no-print {
+        display: none !important;
+    }
+}
+
+/* Visibility utilities for accessibility */
+.sr-only,
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+.sr-only-focusable:focus,
+.visually-hidden-focusable:focus {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+}
+
+/* End of file */
