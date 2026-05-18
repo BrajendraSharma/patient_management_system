@@ -1,6 +1,8 @@
 using Serilog;
 using ClinicalPatientManagement.Api.Extensions;
 using ClinicalPatientManagement.Api.Configuration;
+using ClinicalPatientManagement.Api.Middleware;
+using ClinicalPatientManagement.Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
@@ -8,6 +10,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using ClinicalPatientManagement.Api.Models;
 using System.Threading.RateLimiting;
+using Asp.Versioning;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +30,16 @@ try
     // Add services to the container
     builder.Services.AddControllers();
     builder.Services.AddEndpointsApiExplorer();
+    
+    // Phase 2.4: Add API Versioning support
+    builder.Services.AddApiVersioning(options =>
+    {
+        options.DefaultApiVersion = new ApiVersion(1, 0);
+        options.AssumeDefaultVersionWhenUnspecified = true;
+        options.ReportApiVersions = true;
+    });
+    Log.Information("API versioning configured");
+    
     builder.Services.AddSwaggerGen();
 
     // Phase 1.1: Fix CORS Configuration - Use whitelisted origins from appsettings
@@ -52,6 +65,10 @@ try
     // Phase 1.3: Add JWT Key Provider for secure key management
     builder.Services.AddScoped<IJwtKeyProvider, JwtKeyProvider>();
     Log.Information("JWT Key Provider registered");
+    
+    // Phase 2: Register UnitOfWork for transaction management
+    builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+    Log.Information("Unit of Work registered for transaction management");
 
     // Add Rate Limiting
     builder.Services.AddRateLimiter(options =>
@@ -119,6 +136,10 @@ try
 
     }
 
+    
+    // Phase 2.3: Register global exception handling middleware (before other middleware)
+    app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
+    Log.Information("Global exception handling middleware registered");
     
     // ✅ Redirect root URL to Swagger
     app.MapGet("/", () => Results.Redirect("/swagger"));

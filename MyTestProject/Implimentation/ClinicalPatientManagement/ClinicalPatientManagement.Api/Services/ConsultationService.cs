@@ -1,7 +1,7 @@
 using AutoMapper;
 using ClinicalPatientManagement.Api.DTOs;
 using ClinicalPatientManagement.Api.Models;
-using ClinicalPatientManagement.Api.Repositories;
+using ClinicalPatientManagement.Api.Services;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using ILogger = Serilog.ILogger;
@@ -12,27 +12,22 @@ namespace ClinicalPatientManagement.Api.Services;
 /// Service implementation for consultation management operations
 /// Step 9: Implement Consultation Creation - Business Logic Layer with AutoMapper
 /// Step 11: Persist consultations with transactions - ACID compliance
+/// Phase 2: Updated to use IUnitOfWork pattern consistently
 /// </summary>
 public class ConsultationService : IConsultationService
 {
-    private readonly IConsultationRepository _repository;
-    private readonly IAppointmentRepository _appointmentRepository;
-    private readonly IPrescriptionService _prescriptionService;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IPrescriptionService _prescriptionService;
     private readonly IMapper _mapper;
     private readonly ILogger _logger;
 
     public ConsultationService(
-        IConsultationRepository repository,
-        IAppointmentRepository appointmentRepository,
-        IPrescriptionService prescriptionService,
         IUnitOfWork unitOfWork,
+        IPrescriptionService prescriptionService,
         IMapper mapper)
     {
-        _repository = repository ?? throw new ArgumentNullException(nameof(repository));
-        _appointmentRepository = appointmentRepository ?? throw new ArgumentNullException(nameof(appointmentRepository));
-        _prescriptionService = prescriptionService ?? throw new ArgumentNullException(nameof(prescriptionService));
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
+        _prescriptionService = prescriptionService ?? throw new ArgumentNullException(nameof(prescriptionService));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         _logger = Log.ForContext<ConsultationService>();
     }
@@ -45,7 +40,7 @@ public class ConsultationService : IConsultationService
         try
         {
             _logger.Information("Fetching all consultations");
-            var consultations = await _repository.GetAll().ToListAsync(cancellationToken);
+            var consultations = await _unitOfWork.Consultations.GetAll().ToListAsync(cancellationToken);
             return _mapper.Map<IEnumerable<ConsultationDto>>(consultations);
         }
         catch (Exception ex)
@@ -63,7 +58,7 @@ public class ConsultationService : IConsultationService
         try
         {
             _logger.Information("Fetching consultation with ID {ConsultationId}", id);
-            var consultation = await _repository.GetByIdAsync(id, cancellationToken);
+            var consultation = await _unitOfWork.Consultations.GetByIdAsync(id, cancellationToken);
             return consultation == null ? null : _mapper.Map<ConsultationDto>(consultation);
         }
         catch (Exception ex)
@@ -75,6 +70,7 @@ public class ConsultationService : IConsultationService
 
     /// <summary>
     /// Create new consultation with validation and prescription (if medications provided)
+    /// Phase 2: Uses UnitOfWork to persist changes (ensures ACID compliance)
     /// </summary>
     public async Task<ConsultationDto> CreateAsync(CreateConsultationDto createDto, CancellationToken cancellationToken = default)
     {
@@ -92,7 +88,7 @@ public class ConsultationService : IConsultationService
             }
 
             // Check if appointment exists
-            var appointmentExists = await _appointmentRepository.ExistsAsync(createDto.AppointmentId, cancellationToken);
+            var appointmentExists = await _unitOfWork.Appointments.ExistsAsync(createDto.AppointmentId, cancellationToken);
             if (!appointmentExists)
             {
                 _logger.Warning("Appointment with ID {AppointmentId} not found", createDto.AppointmentId);
@@ -100,7 +96,7 @@ public class ConsultationService : IConsultationService
             }
 
             // Check if consultation already exists for this appointment
-            var existingConsultation = await _repository.ExistsByAppointmentIdAsync(createDto.AppointmentId, cancellationToken);
+            var existingConsultation = await _unitOfWork.Consultations.ExistsByAppointmentIdAsync(createDto.AppointmentId, cancellationToken);
             if (existingConsultation)
             {
                 _logger.Warning("Consultation already exists for appointment {AppointmentId}", createDto.AppointmentId);
@@ -108,7 +104,10 @@ public class ConsultationService : IConsultationService
             }
 
             var consultation = _mapper.Map<Consultation>(createDto);
-            var createdConsultation = await _repository.AddAsync(consultation, cancellationToken);
+            var createdConsultation = await _unitOfWork.Consultations.AddAsync(consultation, cancellationToken);
+            
+            // Persist changes through UnitOfWork
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             _logger.Information("Consultation created successfully with ID {ConsultationId} for appointment {AppointmentId}", 
                 createdConsultation.Id, createdConsultation.AppointmentId);
@@ -138,6 +137,7 @@ public class ConsultationService : IConsultationService
 
     /// <summary>
     /// Update existing consultation with validation
+    /// Phase 2: Uses UnitOfWork to persist changes (ensures ACID compliance)
     /// </summary>
     public async Task<ConsultationDto> UpdateAsync(int id, UpdateConsultationDto updateDto, CancellationToken cancellationToken = default)
     {
@@ -146,7 +146,7 @@ public class ConsultationService : IConsultationService
             if (updateDto == null)
                 throw new ArgumentNullException(nameof(updateDto));
 
-            var consultation = await _repository.GetByIdAsync(id, cancellationToken);
+            var consultation = await _unitOfWork.Consultations.GetByIdAsync(id, cancellationToken);
             if (consultation == null)
                 throw new InvalidOperationException($"Consultation with ID {id} not found");
 
@@ -167,7 +167,10 @@ public class ConsultationService : IConsultationService
             }
 
             var consultationToUpdate = _mapper.Map(updateDto, consultation);
-            var updatedConsultation = await _repository.UpdateAsync(consultationToUpdate, cancellationToken);
+            var updatedConsultation = await _unitOfWork.Consultations.UpdateAsync(consultationToUpdate, cancellationToken);
+            
+            // Persist changes through UnitOfWork
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             _logger.Information("Consultation with ID {ConsultationId} updated successfully", id);
             return _mapper.Map<ConsultationDto>(updatedConsultation);
@@ -181,14 +184,17 @@ public class ConsultationService : IConsultationService
 
     /// <summary>
     /// Delete consultation by ID
+    /// Phase 2: Uses UnitOfWork to persist changes (ensures ACID compliance)
     /// </summary>
     public async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
         try
         {
-            var result = await _repository.DeleteAsync(id, cancellationToken);
+            var result = await _unitOfWork.Consultations.DeleteAsync(id, cancellationToken);
             if (result)
             {
+                // Persist changes through UnitOfWork
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
                 _logger.Information("Consultation with ID {ConsultationId} deleted successfully", id);
             }
             else
@@ -212,7 +218,7 @@ public class ConsultationService : IConsultationService
         try
         {
             _logger.Information("Fetching consultation for appointment {AppointmentId}", appointmentId);
-            var consultation = await _repository.GetByAppointmentIdAsync(appointmentId, cancellationToken);
+            var consultation = await _unitOfWork.Consultations.GetByAppointmentIdAsync(appointmentId, cancellationToken);
             return consultation == null ? null : _mapper.Map<ConsultationDto>(consultation);
         }
         catch (Exception ex)
@@ -230,7 +236,7 @@ public class ConsultationService : IConsultationService
         try
         {
             _logger.Information("Fetching consultations for patient {PatientId}", patientId);
-            var consultations = await _repository.GetByPatientIdAsync(patientId, cancellationToken);
+            var consultations = await _unitOfWork.Consultations.GetByPatientIdAsync(patientId, cancellationToken);
             return _mapper.Map<IEnumerable<ConsultationDto>>(consultations);
         }
         catch (Exception ex)
@@ -245,7 +251,7 @@ public class ConsultationService : IConsultationService
     /// </summary>
     public async Task<bool> ExistsAsync(int id, CancellationToken cancellationToken = default)
     {
-        return await _repository.ExistsAsync(id, cancellationToken);
+        return await _unitOfWork.Consultations.ExistsAsync(id, cancellationToken);
     }
 
     /// <summary>
@@ -332,7 +338,7 @@ public class ConsultationService : IConsultationService
             }
 
             // Step 3: Check if appointment exists
-            var appointmentExists = await _appointmentRepository.ExistsAsync(consultationDto.AppointmentId, cancellationToken);
+            var appointmentExists = await _unitOfWork.Appointments.ExistsAsync(consultationDto.AppointmentId, cancellationToken);
             if (!appointmentExists)
             {
                 _logger.Warning("Appointment with ID {AppointmentId} not found during transaction", consultationDto.AppointmentId);
@@ -340,7 +346,7 @@ public class ConsultationService : IConsultationService
             }
 
             // Step 4: Check if consultation already exists for this appointment
-            var existingConsultation = await _repository.ExistsByAppointmentIdAsync(consultationDto.AppointmentId, cancellationToken);
+            var existingConsultation = await _unitOfWork.Consultations.ExistsByAppointmentIdAsync(consultationDto.AppointmentId, cancellationToken);
             if (existingConsultation)
             {
                 _logger.Warning("Consultation already exists for appointment {AppointmentId}", consultationDto.AppointmentId);
@@ -349,7 +355,7 @@ public class ConsultationService : IConsultationService
 
             // Step 5: Create consultation
             var consultation = _mapper.Map<Consultation>(consultationDto);
-            var createdConsultation = await _repository.AddAsync(consultation, cancellationToken);
+            var createdConsultation = await _unitOfWork.Consultations.AddAsync(consultation, cancellationToken);
             _logger.Information("Consultation created in transaction: ID {ConsultationId}", createdConsultation.Id);
 
             // Step 6: Create prescription if provided
@@ -366,7 +372,7 @@ public class ConsultationService : IConsultationService
             }
 
             // Step 7: Commit transaction - all changes are persisted atomically
-            await _unitOfWork.CommitTransactionAsync(cancellationToken);
+            await _unitOfWork.CommitAsync(cancellationToken);
             _logger.Information("Transaction committed successfully for consultation {ConsultationId}", createdConsultation.Id);
 
             result = _mapper.Map<ConsultationDto>(createdConsultation);
@@ -379,7 +385,7 @@ public class ConsultationService : IConsultationService
             _logger.Error(ex, "Error in consultation with prescription transaction, rolling back all changes");
             
             // Ensure transaction is rolled back on any error
-            await _unitOfWork.RollbackTransactionAsync(cancellationToken);
+            await _unitOfWork.RollbackAsync(cancellationToken);
             throw;
         }
     }
@@ -454,7 +460,7 @@ public class ConsultationService : IConsultationService
                 endDate?.ToString("yyyy-MM-dd") ?? "end of time");
 
             // Get all consultations for the patient
-            var consultations = await _repository.GetByPatientIdAsync(patientId, cancellationToken);
+            var consultations = await _unitOfWork.Consultations.GetByPatientIdAsync(patientId, cancellationToken);
 
             // Apply date filtering
             var filtered = consultations.AsEnumerable();

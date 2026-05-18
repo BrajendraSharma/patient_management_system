@@ -17,14 +17,20 @@ namespace ClinicalPatientManagement.Api.Tests;
 public class PatientServiceTests
 {
     private readonly Mock<IPatientRepository> _repositoryMock;
+    private readonly Mock<IUnitOfWork> _mockUnitOfWork;
     private readonly Mock<IMapper> _mapperMock;
     private readonly PatientService _service;
 
     public PatientServiceTests()
     {
         _repositoryMock = new Mock<IPatientRepository>();
+        _mockUnitOfWork = new Mock<IUnitOfWork>();
         _mapperMock = new Mock<IMapper>();
-        _service = new PatientService(_repositoryMock.Object, _mapperMock.Object);
+        
+        // Setup UnitOfWork to return the repository mock
+        _mockUnitOfWork.Setup(u => u.Patients).Returns(_repositoryMock.Object);
+        
+        _service = new PatientService(_mockUnitOfWork.Object, _mapperMock.Object);
     }
 
     #region GetAllAsync Tests

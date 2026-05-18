@@ -1,7 +1,7 @@
 using AutoMapper;
 using ClinicalPatientManagement.Api.DTOs;
 using ClinicalPatientManagement.Api.Models;
-using ClinicalPatientManagement.Api.Repositories;
+using ClinicalPatientManagement.Api.Services;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using ILogger = Serilog.ILogger;
@@ -11,16 +11,17 @@ namespace ClinicalPatientManagement.Api.Services;
 /// <summary>
 /// Service implementation for patient management operations
 /// Step 6: Patient Management - Business Logic Layer with AutoMapper
+/// Phase 2: Updated to use IUnitOfWork pattern for transaction management
 /// </summary>
 public class PatientService : IPatientService
 {
-    private readonly IPatientRepository _repository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly ILogger _logger;
 
-    public PatientService(IPatientRepository repository, IMapper mapper)
+    public PatientService(IUnitOfWork unitOfWork, IMapper mapper)
     {
-        _repository = repository ?? throw new ArgumentNullException(nameof(repository));
+        _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         _logger = Log.ForContext<PatientService>();
     }
@@ -33,7 +34,7 @@ public class PatientService : IPatientService
         try
         {
             _logger.Information("Fetching all patients");
-            var patients = await _repository.GetAll().ToListAsync();
+            var patients = await _unitOfWork.Patients.GetAll().ToListAsync();
             return _mapper.Map<IEnumerable<PatientDto>>(patients);
         }
         catch (Exception ex)
@@ -51,7 +52,7 @@ public class PatientService : IPatientService
         try
         {
             _logger.Information("Fetching patient with ID {PatientId}", id);
-            var patient = await _repository.GetByIdAsync(id, cancellationToken);
+            var patient = await _unitOfWork.Patients.GetByIdAsync(id, cancellationToken);
             return patient == null ? null : _mapper.Map<PatientDto>(patient);
         }
         catch (Exception ex)
@@ -63,6 +64,7 @@ public class PatientService : IPatientService
 
     /// <summary>
     /// Create new patient with validation
+    /// Phase 2: Uses UnitOfWork to persist changes (ensures ACID compliance)
     /// </summary>
     public async Task<PatientDto> CreateAsync(CreatePatientDto createDto, CancellationToken cancellationToken = default)
     {
@@ -80,7 +82,7 @@ public class PatientService : IPatientService
             }
 
             // Check for duplicate phone number
-            var existingPatientWithPhone = await _repository.GetAll()
+            var existingPatientWithPhone = await _unitOfWork.Patients.GetAll()
                 .FirstOrDefaultAsync(p => p.Phone == createDto.Phone, cancellationToken);
             
             if (existingPatientWithPhone != null)
@@ -90,7 +92,10 @@ public class PatientService : IPatientService
             }
 
             var patient = _mapper.Map<Patient>(createDto);
-            var createdPatient = await _repository.AddAsync(patient, cancellationToken);
+            var createdPatient = await _unitOfWork.Patients.AddAsync(patient, cancellationToken);
+            
+            // Persist changes through UnitOfWork
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             _logger.Information("Patient created successfully with ID {PatientId}", createdPatient.Id);
             return _mapper.Map<PatientDto>(createdPatient);
@@ -104,6 +109,7 @@ public class PatientService : IPatientService
 
     /// <summary>
     /// Update existing patient with validation
+    /// Phase 2: Uses UnitOfWork to persist changes (ensures ACID compliance)
     /// </summary>
     public async Task<PatientDto> UpdateAsync(int id, UpdatePatientDto updateDto, CancellationToken cancellationToken = default)
     {
@@ -112,7 +118,7 @@ public class PatientService : IPatientService
             if (updateDto == null)
                 throw new ArgumentNullException(nameof(updateDto));
 
-            var patient = await _repository.GetByIdAsync(id, cancellationToken);
+            var patient = await _unitOfWork.Patients.GetByIdAsync(id, cancellationToken);
             if (patient == null)
                 throw new InvalidOperationException($"Patient with ID {id} not found");
 
@@ -133,7 +139,10 @@ public class PatientService : IPatientService
             }
 
             var patientToUpdate = _mapper.Map(updateDto, patient);
-            var updatedPatient = await _repository.UpdateAsync(patientToUpdate, cancellationToken);
+            var updatedPatient = await _unitOfWork.Patients.UpdateAsync(patientToUpdate, cancellationToken);
+            
+            // Persist changes through UnitOfWork
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             _logger.Information("Patient with ID {PatientId} updated successfully", id);
             return _mapper.Map<PatientDto>(updatedPatient);
@@ -147,14 +156,17 @@ public class PatientService : IPatientService
 
     /// <summary>
     /// Delete patient by ID
+    /// Phase 2: Uses UnitOfWork to persist changes (ensures ACID compliance)
     /// </summary>
     public async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
         try
         {
-            var result = await _repository.DeleteAsync(id, cancellationToken);
+            var result = await _unitOfWork.Patients.DeleteAsync(id, cancellationToken);
             if (result)
             {
+                // Persist changes through UnitOfWork
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
                 _logger.Information("Patient with ID {PatientId} deleted successfully", id);
             }
             else
@@ -178,7 +190,7 @@ public class PatientService : IPatientService
         try
         {
             _logger.Information("Searching patients with term: {SearchTerm}", searchTerm);
-            var patients = await _repository.SearchAsync(searchTerm, cancellationToken);
+            var patients = await _unitOfWork.Patients.SearchAsync(searchTerm, cancellationToken);
             return _mapper.Map<IEnumerable<PatientDto>>(patients);
         }
         catch (Exception ex)
@@ -193,7 +205,7 @@ public class PatientService : IPatientService
     /// </summary>
     public async Task<bool> ExistsAsync(int id, CancellationToken cancellationToken = default)
     {
-        return await _repository.ExistsAsync(id, cancellationToken);
+        return await _unitOfWork.Patients.ExistsAsync(id, cancellationToken);
     }
 
     /// <summary>

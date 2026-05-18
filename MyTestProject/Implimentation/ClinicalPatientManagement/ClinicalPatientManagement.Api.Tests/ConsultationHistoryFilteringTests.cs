@@ -28,11 +28,14 @@ public class ConsultationHistoryFilteringTests
         _prescriptionServiceMock = new Mock<IPrescriptionService>();
         _unitOfWorkMock = new Mock<IUnitOfWork>();
         _mapperMock = new Mock<IMapper>();
+        
+        // Setup UnitOfWork to return the repository mocks
+        _unitOfWorkMock.Setup(u => u.Consultations).Returns(_repositoryMock.Object);
+        _unitOfWorkMock.Setup(u => u.Appointments).Returns(_appointmentRepositoryMock.Object);
+        
         _service = new ConsultationService(
-            _repositoryMock.Object,
-            _appointmentRepositoryMock.Object,
-            _prescriptionServiceMock.Object,
             _unitOfWorkMock.Object,
+            _prescriptionServiceMock.Object,
             _mapperMock.Object);
     }
 

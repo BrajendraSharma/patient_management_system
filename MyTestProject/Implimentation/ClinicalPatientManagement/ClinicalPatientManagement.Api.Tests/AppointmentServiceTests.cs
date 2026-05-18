@@ -67,6 +67,7 @@ public class AppointmentServiceTests
 {
     private readonly Mock<IAppointmentRepository> _mockAppointmentRepository;
     private readonly Mock<IPatientRepository> _mockPatientRepository;
+    private readonly Mock<IUnitOfWork> _mockUnitOfWork;
     private readonly Mock<IMapper> _mockMapper;
     private readonly AppointmentService _appointmentService;
 
@@ -74,11 +75,15 @@ public class AppointmentServiceTests
     {
         _mockAppointmentRepository = new Mock<IAppointmentRepository>();
         _mockPatientRepository = new Mock<IPatientRepository>();
+        _mockUnitOfWork = new Mock<IUnitOfWork>();
         _mockMapper = new Mock<IMapper>();
         
+        // Setup UnitOfWork to return the repository mocks
+        _mockUnitOfWork.Setup(u => u.Appointments).Returns(_mockAppointmentRepository.Object);
+        _mockUnitOfWork.Setup(u => u.Patients).Returns(_mockPatientRepository.Object);
+        
         _appointmentService = new AppointmentService(
-            _mockAppointmentRepository.Object,
-            _mockPatientRepository.Object,
+            _mockUnitOfWork.Object,
             _mockMapper.Object
         );
     }
